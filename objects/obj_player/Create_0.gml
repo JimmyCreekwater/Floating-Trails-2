@@ -121,3 +121,40 @@ weave_mode_cooldown = 0;
 // Candy Cane mode specific
 candy_rotation_offset = 0;
 global.permanent_wave_segments = ds_list_create();
+
+
+// Window Sizing
+
+// ADD THIS TO obj_game Create Event (at the end):
+
+// ===== WINDOW AND DISPLAY SETUP =====
+// Get display size
+var display_w = display_get_width();
+var display_h = display_get_height();
+
+// Set a reasonable default window size (80% of screen)
+var window_w = display_w * 0.8;
+var window_h = display_h * 0.8;
+
+// Make sure it's not bigger than the room
+window_w = min(window_w, 1366);
+window_h = min(window_h, 768);
+
+// Set window size and center it
+window_set_size(window_w, window_h);
+window_center();
+
+// Enable window resizing
+window_set_min_width(800);
+window_set_min_height(600);
+window_set_max_width(display_w);
+window_set_max_height(display_h);
+
+// Set up proper GUI scaling
+display_set_gui_size(1366, 768); // Fixed GUI size for consistent UI
+
+// Enable the application surface for proper scaling
+application_surface_draw_enable(true);
+
+// Start windowed (not fullscreen)
+window_set_fullscreen(false);

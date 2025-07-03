@@ -485,6 +485,22 @@ if (keyboard_check_pressed(ord("W")) && living_weave_unlocked) {
     reward_notification_timer = 90;
 }
 
+// In obj_player Step_0.gml, find the W key toggle and add this RIGHT AFTER it:
+
+// R KEY: Cycle through weave modes (make sure this is OUTSIDE the W key block)
+if (keyboard_check_pressed(ord("R")) && living_weave_unlocked && living_weave_active && weave_mode_cooldown <= 0) {
+    weave_mode = (weave_mode + 1) % weave_mode_count;
+    reward_notification = "Weave Mode: " + weave_mode_names[weave_mode];
+    reward_notification_timer = 90;
+    weave_mode_cooldown = 20; // Prevent rapid cycling
+    
+    // Debug message to confirm it's working
+    show_debug_message("Weave mode changed to: " + string(weave_mode) + " - " + weave_mode_names[weave_mode]);
+}
+
+// Make sure this cooldown decrease is also outside the W key block
+if (weave_mode_cooldown > 0) weave_mode_cooldown--;
+
 // Speed sampling for wave animation
 speed_sample_timer++;
 if (speed_sample_timer >= speed_sample_interval) {

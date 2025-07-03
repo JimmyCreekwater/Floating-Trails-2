@@ -86,3 +86,35 @@ if (random(100) < 1.5) { // ~1.5% chance per frame = every 3-4 seconds
         instance_create_layer(spawn_x, spawn_y, "Instances", obj_shard);
     }
 }
+
+// ===== FULLSCREEN TOGGLE =====
+// F11 or Alt+Enter to toggle fullscreen
+if (keyboard_check_pressed(vk_f11) || (keyboard_check(vk_alt) && keyboard_check_pressed(vk_enter))) {
+    if (window_get_fullscreen()) {
+        window_set_fullscreen(false);
+        
+        // Return to windowed mode with reasonable size
+        var display_w = display_get_width();
+        var display_h = display_get_height();
+        var window_w = min(display_w * 0.8, 1366);
+        var window_h = min(display_h * 0.8, 768);
+        
+        window_set_size(window_w, window_h);
+        window_center();
+    } else {
+        window_set_fullscreen(true);
+    }
+}
+
+// ESC to exit fullscreen
+if (keyboard_check_pressed(vk_escape) && window_get_fullscreen()) {
+    window_set_fullscreen(false);
+    
+    var display_w = display_get_width();
+    var display_h = display_get_height();
+    var window_w = min(display_w * 0.8, 1366);
+    var window_h = min(display_h * 0.8, 768);
+    
+    window_set_size(window_w, window_h);
+    window_center();
+}
