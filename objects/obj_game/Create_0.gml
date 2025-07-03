@@ -47,3 +47,5 @@ global.total_pixels_painted = 0;
 
 // Global trail segments for Living Weave animation
 global.painted_trail_segments = ds_list_create();
+// Permanent animated wave segments for Living Weave
+global.permanent_wave_segments = ds_list_create();

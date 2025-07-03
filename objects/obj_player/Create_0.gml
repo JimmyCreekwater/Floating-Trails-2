@@ -46,7 +46,6 @@ if (x == 0 && y == 0) {
 neon_trail_unlocked = false;
 neon_trail_active = false;
 // Neon trail effect properties
-neon_segments = ds_list_create(); // Store neon trail segments with timers
 neon_fade_time = 480; // 8 seconds at 60fps
 // Shape detection
 last_shape_check = 0;
@@ -97,7 +96,6 @@ event_tickets = 3;
 living_weave_unlocked = false;
 living_weave_active = false;
 // Wave animation properties
-weave_segments = ds_list_create(); // Store trail segments for wave rendering
 weave_time = 0; // Global animation timer
 wave_frequency = 0.05; // Base wave frequency
 wave_amplitude = 8; // Wave height in pixels
