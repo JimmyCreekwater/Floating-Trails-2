@@ -112,3 +112,12 @@ player_connected = true;
 disconnection_time = 0;
 random_animation_seed = random(1000);
 
+// Living Weave Mode System
+weave_mode = 0; // 0 = Wave, 1 = ZigZag, 2 = Candy Cane, 3 = Heartbeat
+weave_mode_names = ["Wave Flow", "Lightning Strike", "Candy Swirl", "Heartbeat Pulse"];
+weave_mode_count = 4;
+weave_mode_cooldown = 0;
+
+// Candy Cane mode specific
+candy_rotation_offset = 0;
+global.permanent_wave_segments = ds_list_create();

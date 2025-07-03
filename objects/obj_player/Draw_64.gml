@@ -126,15 +126,15 @@ if (variable_instance_exists(id, "living_weave_unlocked")) {
         draw_set_color(living_weave_active ? c_lime : c_white);
         var status_text = "Living Weave: " + (living_weave_active ? "ON (W)" : "OFF (W)");
         if (living_weave_active) {
-            status_text += " | Speed: " + string_format(wave_speed_multiplier, 1, 1) + "x";
-        }
+    status_text += " | Mode: " + weave_mode_names[weave_mode] + " (R)";
+}
         draw_text(ui_x, ui_y + (line * 20), status_text);
         line++;
         
         // Show wave animation info when active
         if (living_weave_active) {
             draw_set_color(c_aqua);
-            draw_text(ui_x, ui_y + (line * 20), "  Segments: " + string(ds_list_size(weave_segments)));
+            draw_text(ui_x, ui_y + (line * 20), "  Segments: " + string(ds_list_size(global.permanent_wave_segments)));
             line++;
         }
     } else {
@@ -216,3 +216,25 @@ draw_set_alpha(1);
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
 
+// Controls help (bottom left)
+draw_set_color(c_white);
+draw_set_alpha(0.7);
+draw_set_halign(fa_left);
+draw_set_valign(fa_bottom);
+
+var help_y = gui_height - 20;
+var help_line_height = 20;
+
+draw_text(20, help_y, "CONTROLS:");
+draw_text(20, help_y - help_line_height, "Move: WASD | Sprint: SHIFT | Crouch: CTRL");
+draw_text(20, help_y - help_line_height * 2, "Change Color: C | Neon Trail: N");
+
+if (living_weave_unlocked) {
+    draw_text(20, help_y - help_line_height * 3, "Living Weave: W | Change Pattern: R");
+}
+
+if (sparkle_pulse_unlocked) {
+    draw_text(20, help_y - help_line_height * 4, "Sparkle Mode: P | Fire Beam: Q");
+}
+
+draw_set_valign(fa_top);
