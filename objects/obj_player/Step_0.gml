@@ -58,7 +58,7 @@ if (living_weave_active && living_weave_unlocked) {
         case 0: // WAVE FLOW (original)
             var wave_segments = max(3, line_length / 8);
             var wave_frequency = 0.3 + (current_speed * 0.1);
-            var wave_amplitude = final_brush_size * 2;
+            var wave_amplitude = final_brush_size * 4;
             
             // Multi-layer wave for depth
             draw_set_alpha(0.2);
@@ -109,7 +109,7 @@ if (living_weave_active && living_weave_unlocked) {
             
         case 1: // LIGHTNING STRIKE (ZigZag)
             var zig_segments = max(4, line_length / 20);
-            var zig_amplitude = final_brush_size * 3;
+            var zig_amplitude = final_brush_size * 5;
             
             // Electric glow
             draw_set_alpha(0.3);
@@ -164,7 +164,7 @@ if (living_weave_active && living_weave_unlocked) {
             
         case 2: // CANDY SWIRL
             var spiral_segments = max(6, line_length / 5);
-            var spiral_radius = final_brush_size * 2.5;
+            var spiral_radius = final_brush_size * 4;
             
             // Draw two intertwining spirals
             for (var spiral = 0; spiral < 2; spiral++) {
@@ -202,7 +202,7 @@ if (living_weave_active && living_weave_unlocked) {
             
         case 3: // HEARTBEAT PULSE
             var pulse_segments = max(4, line_length / 15);
-            var pulse_base_amp = final_brush_size * 1.5;
+            var pulse_base_amp = final_brush_size * 3;
             
             // Outer pulse glow
             draw_set_alpha(0.2);

@@ -1,240 +1,235 @@
-// MASSIVE UI: GIANT text, HUGE layout, SUPER READABLE
+// REPLACE ENTIRE obj_player Draw_64.gml with this modern UI design
+
+// Get GUI dimensions
 var gui_width = display_get_gui_width();
 var gui_height = display_get_gui_height();
-// Set large, readable font
-draw_set_font(-1); // Default font
+
+// Set default drawing settings
+draw_set_font(-1);
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
-// UI positioning - MASSIVE panel
-var panel_x = 30;
-var panel_y = 30;
-var panel_width = 700;  // Much wider
-var panel_height = 400; // Much taller
-var text_size = 50;     // HUGE text spacing (was 24, now 50)
-// Background panel with border
+
+// ========== BOTTOM DOCK UI ==========
+// Modern dock-style interface at bottom of screen
+
+var dock_height = 180;
+var dock_y = gui_height - dock_height;
+var dock_padding = 30;
+var section_spacing = 80;
+
+// Draw dock background
 draw_set_color(c_black);
-draw_set_alpha(0.8);
-draw_rectangle(panel_x, panel_y, panel_x + panel_width, panel_y + panel_height, false);
+draw_set_alpha(0.85);
+draw_roundrect(10, dock_y - 10, gui_width - 10, gui_height - 10, false);
+
+// Dock border
 draw_set_color(c_white);
-draw_set_alpha(1);
-draw_rectangle(panel_x, panel_y, panel_x + panel_width, panel_y + panel_height, true);
-// Line counter for easy positioning
-var line = 0;
-// LEVEL (MASSIVE and prominent)
+draw_set_alpha(0.5);
+draw_roundrect(10, dock_y - 10, gui_width - 10, gui_height - 10, true);
+
+// ===== LEFT SECTION: Player Stats =====
+var left_x = dock_padding;
+var left_y = dock_y + 20;
+
+// LEVEL - HUGE
 draw_set_color(c_lime);
-draw_text_transformed(panel_x + 25, panel_y + 25 + (line * text_size), "LEVEL: " + string(player_level), 3.0, 3.0, 0); // 3x scale!
-line++;
-// XP Progress
-if (player_level < 6) {
+draw_set_alpha(1);
+draw_text_transformed(left_x, left_y, "LEVEL " + string(player_level), 3, 3, 0);
+
+// XP Bar
+if (player_level < 10) {
+    var xp_y = left_y + 50;
     var current_xp = ink_xp;
     var needed_xp = xp_needed[player_level];
     var prev_xp = (player_level > 1) ? xp_needed[player_level - 1] : 0;
     var level_progress = (current_xp - prev_xp) / (needed_xp - prev_xp);
     
+    // XP Text
     draw_set_color(c_white);
-    draw_text_transformed(panel_x + 25, panel_y + 25 + (line * text_size), "XP: " + string(current_xp) + " / " + string(needed_xp), 2.5, 2.5, 0); // 2.5x scale!
-    line++;
+    draw_text_transformed(left_x, xp_y, "XP: " + string(current_xp) + "/" + string(needed_xp), 1.5, 1.5, 0);
     
-    // MASSIVE XP Progress bar
-    var bar_x = panel_x + 25;
-    var bar_y = panel_y + 25 + (line * text_size);
-    var bar_width = 500; // Much wider
-    var bar_height = 40; // Much taller
+    // XP Bar
+    var bar_y = xp_y + 25;
+    var bar_width = 250;
+    var bar_height = 20;
     
-    draw_set_color(c_gray);
-    draw_rectangle(bar_x, bar_y, bar_x + bar_width, bar_y + bar_height, false);
+    draw_set_color(c_dkgray);
+    draw_roundrect(left_x, bar_y, left_x + bar_width, bar_y + bar_height, false);
+    
     draw_set_color(c_lime);
-    draw_rectangle(bar_x, bar_y, bar_x + (bar_width * level_progress), bar_y + bar_height, false);
+    draw_roundrect(left_x, bar_y, left_x + (bar_width * level_progress), bar_y + bar_height, false);
+    
     draw_set_color(c_white);
-    draw_rectangle(bar_x, bar_y, bar_x + bar_width, bar_y + bar_height, true);
-    line += 1.8; // Extra space after progress bar
+    draw_set_alpha(0.7);
+    draw_roundrect(left_x, bar_y, left_x + bar_width, bar_y + bar_height, true);
+    draw_set_alpha(1);
 } else {
     draw_set_color(c_yellow);
-    draw_text_transformed(panel_x + 25, panel_y + 25 + (line * text_size), "MAX LEVEL!", 2.8, 2.8, 0);
-    line++;
+    draw_text_transformed(left_x, left_y + 50, "MAX LEVEL!", 2, 2, 0);
 }
-// Currencies (HUGE and colorful)
+
+// Currencies
+var currency_y = left_y + 100;
 draw_set_color(c_aqua);
-draw_text_transformed(panel_x + 25, panel_y + 25 + (line * text_size), "SHARDS: " + string(shards), 2.2, 2.2, 0);
-line++;
+draw_text_transformed(left_x, currency_y, "SHARDS: " + string(shards), 1.8, 1.8, 0);
+
 draw_set_color(c_fuchsia);
-draw_text_transformed(panel_x + 25, panel_y + 25 + (line * text_size), "GEMS: " + string(gems), 2.2, 2.2, 0);
-line++;
-// Rewards section (if you've implemented Phase 4B)
-if (variable_instance_exists(id, "neon_trail_unlocked")) {
-    line += 0.5; // Gap
-    draw_set_color(c_yellow);
-    draw_text_transformed(panel_x + 25, panel_y + 25 + (line * text_size), "NEON TRAIL:", 2.0, 2.0, 0);
-    
-    if (neon_trail_unlocked) {
-        draw_set_color(neon_trail_active ? c_lime : c_white);
-        draw_text_transformed(panel_x + 350, panel_y + 25 + (line * text_size), (neon_trail_active ? "ON (N)" : "OFF (N)"), 2.0, 2.0, 0);
-    } else {
-        draw_set_color(c_gray);
-        var progress_text = "";
-        if (player_level >= 5) {
-            progress_text = "UNLOCKED!";
-        } else if (shards >= 250) {
-            progress_text = "UNLOCKED!";
-        } else {
-            var shards_needed = 250 - shards;
-            progress_text = "Need Lv5 OR " + string(shards_needed) + " shards";
-        }
-        draw_text_transformed(panel_x + 350, panel_y + 25 + (line * text_size), progress_text, 1.8, 1.8, 0);
-    }
-}
+draw_text_transformed(left_x + 150, currency_y, "GEMS: " + string(gems), 1.8, 1.8, 0);
 
-// Sparkle Pulse section
-if (variable_instance_exists(id, "sparkle_pulse_unlocked")) {
-    line += 0.5; // Gap
-    draw_set_color(c_orange);
-    draw_text_transformed(panel_x + 25, panel_y + 25 + (line * text_size), "SPARKLE PULSE:", 2.0, 2.0, 0);
-    
-    if (sparkle_pulse_unlocked) {
-        // Determine status and color
-        var status_text = "";
-        var status_color = c_white;
-        
-		if (sparkle_pulse_active) {
-		    if (pulse_generation_cooldown > 0) {
-		        var cooldown_seconds = ceil(pulse_generation_cooldown / 60);
-		        status_text = "READY IN " + string(cooldown_seconds) + "s (Q)";
-		        status_color = c_orange;
-		    } else {
-		        status_text = "PRESS Q TO FIRE!";
-		        status_color = c_lime;
-		    }
-		} else {
-		    status_text = "MODE OFF (P)";
-		    status_color = c_white;
-		}
+// ===== CENTER SECTION: Active Tools =====
+var center_x = gui_width / 2 - 200;
+var tools_y = dock_y + 20;
 
-        
-        draw_set_color(status_color);
-        draw_text_transformed(panel_x + 400, panel_y + 25 + (line * text_size), status_text, 2.0, 2.0, 0);
-    } else {
-        draw_set_color(c_gray);
-        var progress_text = "Need " + string(max(0, 15 - gems)) + " gems + " + string(max(0, 3 - event_tickets)) + " events";
-        draw_text_transformed(panel_x + 400, panel_y + 25 + (line * text_size), progress_text, 1.6, 1.6, 0);
-    }
-    line++; // Move to next line
-} 
-
-// Living Weave Pattern status
-if (variable_instance_exists(id, "living_weave_unlocked")) {
-    if (living_weave_unlocked) {
-        draw_set_color(living_weave_active ? c_lime : c_white);
-        var status_text = "Living Weave: " + (living_weave_active ? "ON (W)" : "OFF (W)");
-        if (living_weave_active) {
-    status_text += " | Mode: " + weave_mode_names[weave_mode] + " (R)";
-}
-        draw_text(ui_x, ui_y + (line * 20), status_text);
-        line++;
-        
-        // Show wave animation info when active
-        if (living_weave_active) {
-            draw_set_color(c_aqua);
-            draw_text(ui_x, ui_y + (line * 20), "  Segments: " + string(ds_list_size(global.permanent_wave_segments)));
-            line++;
-        }
-    } else {
-        draw_set_color(c_gray);
-        draw_text(ui_x, ui_y + (line * 20), "Living Weave: LOCKED (Level 8)");
-        line++;
-    }
-} else {
-    // Fallback if variable doesn't exist yet
-    draw_set_color(c_gray);
-    draw_text(ui_x, ui_y + (line * 20), "Living Weave: LOCKED");
-    line++;
-}
-
-// COLOR SELECTION DISPLAY
 draw_set_color(c_white);
-draw_text(ui_x, ui_y + (line * 20), "Current Color (C):");
-line++;
-// Show current color as a colored rectangle
+draw_text_transformed(center_x, tools_y, "ACTIVE TOOLS", 2, 2, 0);
+
+var tool_y = tools_y + 35;
+var tool_spacing = 30;
+
+// Current Color
+draw_set_color(c_white);
+draw_text_transformed(center_x, tool_y, "COLOR:", 1.5, 1.5, 0);
 draw_set_color(my_trail_color);
-draw_rectangle(ui_x + 20, ui_y + (line * 20) - 3, ui_x + 60, ui_y + (line * 20) + 12, false);
+draw_roundrect(center_x + 80, tool_y, center_x + 120, tool_y + 20, false);
 draw_set_color(c_white);
-draw_rectangle(ui_x + 20, ui_y + (line * 20) - 3, ui_x + 60, ui_y + (line * 20) + 12, true);
-// Color name
-var color_names = ["Red", "Green", "Blue", "Yellow", "Pink", "Cyan", "Orange", "White", "Purple", "Aqua"];
-draw_text(ui_x + 70, ui_y + (line * 20), color_names[current_color_index]);
-line++;
+draw_text_transformed(center_x + 130, tool_y, "[C]", 1.2, 1.2, 0);
+tool_y += tool_spacing;
 
-
-
-// Center screen notifications (ENORMOUS)
-var center_x = gui_width / 2;
-// Level up notification
-if (variable_instance_exists(id, "level_up_timer") && level_up_timer > 0) {
-    level_up_timer--;
-    
-    var notif_width = 600;  // Much wider
-    var notif_height = 150; // Much taller
-    var notif_x = center_x - notif_width / 2;
-    var notif_y = 250;
-    
-    draw_set_color(c_yellow);
-    draw_set_alpha(0.95);
-    draw_rectangle(notif_x, notif_y, notif_x + notif_width, notif_y + notif_height, false);
-    
-    draw_set_color(c_black);
-    draw_set_alpha(1);
-    draw_rectangle(notif_x, notif_y, notif_x + notif_width, notif_y + notif_height, true);
-    
-    draw_set_halign(fa_center);
-    draw_set_color(c_black);
-    draw_text_transformed(center_x, notif_y + 30, "LEVEL UP!", 4.0, 4.0, 0);  // MASSIVE!
-    draw_text_transformed(center_x, notif_y + 90, "Level " + string(player_level), 3.0, 3.0, 0); // HUGE!
-    draw_set_halign(fa_left);
+// Neon Trail
+if (neon_trail_unlocked) {
+    draw_set_color(neon_trail_active ? c_lime : c_gray);
+    draw_text_transformed(center_x, tool_y, "NEON: " + (neon_trail_active ? "ON" : "OFF") + " [N]", 1.5, 1.5, 0);
+} else {
+    draw_set_color(c_dkgray);
+    draw_text_transformed(center_x, tool_y, "NEON: LOCKED (Lv5)", 1.3, 1.3, 0);
 }
-// Reward notifications (if Phase 4B implemented)
-if (variable_instance_exists(id, "reward_notification_timer") && reward_notification_timer > 0) {
-    var notif_width = 800;  // Much wider
-    var notif_height = 120; // Much taller
-    var notif_x = center_x - notif_width / 2;
-    var notif_y = 450;
-    
-    draw_set_color(c_fuchsia);
-    draw_set_alpha(0.95);
-    draw_rectangle(notif_x, notif_y, notif_x + notif_width, notif_y + notif_height, false);
-    
-    draw_set_color(c_white);
-    draw_set_alpha(1);
-    draw_rectangle(notif_x, notif_y, notif_x + notif_width, notif_y + notif_height, true);
-    
-    draw_set_halign(fa_center);
-    draw_set_color(c_white);
-    draw_text_transformed(center_x, notif_y + 35, reward_notification, 2.5, 2.5, 0); // GIANT!
-    draw_set_halign(fa_left);
+tool_y += tool_spacing;
+
+// Living Weave
+if (living_weave_unlocked) {
+    draw_set_color(living_weave_active ? c_lime : c_gray);
+    var weave_text = "WEAVE: " + (living_weave_active ? "ON" : "OFF") + " [W]";
+    if (living_weave_active) {
+        weave_text = "WEAVE: " + weave_mode_names[weave_mode] + " [W/R]";
+    }
+    draw_text_transformed(center_x, tool_y, weave_text, 1.5, 1.5, 0);
+} else {
+    draw_set_color(c_dkgray);
+    draw_text_transformed(center_x, tool_y, "WEAVE: LOCKED (Lv8)", 1.3, 1.3, 0);
 }
-// Reset all drawing settings
+tool_y += tool_spacing;
+
+// Sparkle Pulse
+if (sparkle_pulse_unlocked) {
+    var sparkle_color = sparkle_pulse_active ? c_lime : c_gray;
+    var sparkle_text = "SPARKLE: ";
+    
+    if (sparkle_pulse_active) {
+        if (pulse_generation_cooldown > 0) {
+            sparkle_color = c_orange;
+            var cooldown_seconds = ceil(pulse_generation_cooldown / 60);
+            sparkle_text += "RELOADING (" + string(cooldown_seconds) + "s)";
+        } else {
+            sparkle_color = c_yellow;
+            sparkle_text += "READY! [Q]";
+        }
+    } else {
+        sparkle_text += "OFF [P]";
+    }
+    
+    draw_set_color(sparkle_color);
+    draw_text_transformed(center_x, tool_y, sparkle_text, 1.5, 1.5, 0);
+} else {
+    draw_set_color(c_dkgray);
+    draw_text_transformed(center_x, tool_y, "SPARKLE: LOCKED", 1.3, 1.3, 0);
+}
+
+// ===== RIGHT SECTION: Controls Help =====
+var right_x = gui_width - 400;
+var controls_y = dock_y + 20;
+
 draw_set_color(c_white);
-draw_set_alpha(1);
-draw_set_halign(fa_left);
-draw_set_valign(fa_top);
+draw_set_alpha(0.8);
+draw_text_transformed(right_x, controls_y, "CONTROLS", 1.8, 1.8, 0);
 
-// Controls help (bottom left)
-draw_set_color(c_white);
-draw_set_alpha(0.7);
-draw_set_halign(fa_left);
-draw_set_valign(fa_bottom);
-
-var help_y = gui_height - 20;
-var help_line_height = 20;
-
-draw_text(20, help_y, "CONTROLS:");
-draw_text(20, help_y - help_line_height, "Move: WASD | Sprint: SHIFT | Crouch: CTRL");
-draw_text(20, help_y - help_line_height * 2, "Change Color: C | Neon Trail: N");
+var help_y = controls_y + 30;
+draw_text_transformed(right_x, help_y, "Move: WASD", 1.3, 1.3, 0);
+help_y += 22;
+draw_text_transformed(right_x, help_y, "Sprint/Crouch: SHIFT/CTRL", 1.3, 1.3, 0);
+help_y += 22;
+draw_text_transformed(right_x, help_y, "Color: C | Neon: N", 1.3, 1.3, 0);
+help_y += 22;
 
 if (living_weave_unlocked) {
-    draw_text(20, help_y - help_line_height * 3, "Living Weave: W | Change Pattern: R");
+    draw_text_transformed(right_x, help_y, "Weave: W | Pattern: R", 1.3, 1.3, 0);
+    help_y += 22;
 }
 
 if (sparkle_pulse_unlocked) {
-    draw_text(20, help_y - help_line_height * 4, "Sparkle Mode: P | Fire Beam: Q");
+    draw_text_transformed(right_x, help_y, "Sparkle: P | Fire: Q", 1.3, 1.3, 0);
 }
 
+// ========== NOTIFICATIONS ==========
+// Level up notification
+if (level_up_timer > 0) {
+    level_up_timer--;
+    
+    var notif_y = dock_y - 200;
+    var notif_width = 500;
+    var notif_height = 120;
+    var notif_x = (gui_width - notif_width) / 2;
+    
+    // Pulsing effect
+    var pulse = 1 + sin(level_up_timer * 0.3) * 0.1;
+    
+    draw_set_color(c_yellow);
+    draw_set_alpha(0.95);
+    draw_roundrect_ext(notif_x, notif_y, notif_x + notif_width, notif_y + notif_height, 20, 20, false);
+    
+    draw_set_color(c_black);
+    draw_set_alpha(1);
+    draw_set_halign(fa_center);
+    draw_text_transformed(gui_width / 2, notif_y + 30, "LEVEL UP!", 3 * pulse, 3 * pulse, 0);
+    draw_text_transformed(gui_width / 2, notif_y + 80, "Level " + string(player_level), 2, 2, 0);
+    draw_set_halign(fa_left);
+}
+
+// Reward notifications
+if (reward_notification_timer > 0) {
+    var notif_y = dock_y - 80;
+    var notif_width = string_width(reward_notification) * 2 + 80;
+    var notif_height = 60;
+    var notif_x = (gui_width - notif_width) / 2;
+    
+    draw_set_color(c_aqua);
+    draw_set_alpha(0.9);
+    draw_roundrect_ext(notif_x, notif_y, notif_x + notif_width, notif_y + notif_height, 15, 15, false);
+    
+    draw_set_color(c_white);
+    draw_set_alpha(1);
+    draw_set_halign(fa_center);
+    draw_text_transformed(gui_width / 2, notif_y + 20, reward_notification, 1.8, 1.8, 0);
+    draw_set_halign(fa_left);
+}
+
+// ========== DEBUG INFO (Top Right) ==========
+if (keyboard_check(vk_tab)) {
+    draw_set_color(c_white);
+    draw_set_alpha(0.7);
+    draw_set_halign(fa_right);
+    var debug_x = gui_width - 20;
+    var debug_y = 20;
+    
+    draw_text(debug_x, debug_y, "FPS: " + string(fps));
+    draw_text(debug_x, debug_y + 20, "Speed: " + string_format(current_speed, 1, 2));
+    draw_text(debug_x, debug_y + 40, "Segments: " + string(ds_list_size(global.permanent_wave_segments)));
+    draw_text(debug_x, debug_y + 60, "Pixels: " + string(global.total_pixels_painted));
+    
+    draw_set_halign(fa_left);
+}
+
+// Reset drawing settings
+draw_set_color(c_white);
+draw_set_alpha(1);
+draw_set_halign(fa_left);
 draw_set_valign(fa_top);
