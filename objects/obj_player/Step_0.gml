@@ -10,6 +10,10 @@ scr_camera_control();
 // SPACE KEY: Toggle drawing on/off
 if (keyboard_check_pressed(vk_space) && drawing_toggle_cooldown <= 0) {
     drawing_enabled = !drawing_enabled;
+	// When turning drawing back ON, start fresh
+if (drawing_enabled) {
+    ds_list_clear(shape_path_points);
+}
     reward_notification = drawing_enabled ? "Drawing ON" : "Drawing OFF (Move Only)";
     reward_notification_timer = 60;
     drawing_toggle_cooldown = 15;
@@ -515,9 +519,11 @@ if (ds_list_size(shape_path_points) == 0) {
         }
     }
 }
+
         last_paint_x = x;
         last_paint_y = y;
-    }
+
+
 
 // Q KEY SPARKLE BEAM: Manual activation system
 if (keyboard_check_pressed(ord("Q")) && sparkle_pulse_unlocked && sparkle_pulse_active && pulse_generation_cooldown <= 0) {
