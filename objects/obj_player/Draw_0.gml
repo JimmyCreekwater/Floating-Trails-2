@@ -3,7 +3,7 @@
 // Draw player sprite
 draw_self();
 
-/ ADD THIS TO obj_player Draw Event (after draw_self()):
+// ADD THIS TO obj_player Draw Event (after draw_self()):
 
 // DEBUG: Visualize path points
 if (keyboard_check(ord("H"))) {
@@ -109,43 +109,33 @@ for (var i = 0; i < ds_list_size(shape_flash_list); i++) {
     }
 }
 
-// Draw path preview when drawing (keep existing code)
-if (drawing_enabled && ds_list_size(shape_path_points) > 1) {
-    draw_set_alpha(0.3);
-    draw_set_color(c_white);
-    
-    // Check if path might close soon
-    var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
-    var first_point = ds_list_find_value(shape_path_points, 0);
-    var close_dist = point_distance(last_point[0], last_point[1], first_point[0], first_point[1]);
-    
-    if (close_dist < 50 && ds_list_size(shape_path_points) > 15) {
-        // Show connection hint
-        draw_set_alpha(0.5 + sin(current_time * 0.01) * 0.3);
-        draw_set_color(c_lime);
-        draw_line_width(last_point[0], last_point[1], first_point[0], first_point[1], 2);
-        draw_circle(first_point[0], first_point[1], 8, false);
-    }
-}
+// In obj_player Draw Event, UPDATE the path preview section:
 
-draw_set_alpha(1);
-draw_set_color(c_white);
 // Draw path preview when drawing
 if (drawing_enabled && ds_list_size(shape_path_points) > 1) {
     draw_set_alpha(0.3);
     draw_set_color(c_white);
     
-    // Check if path might close soon
-    var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+    // Get first and last points
     var first_point = ds_list_find_value(shape_path_points, 0);
+    var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
     var close_dist = point_distance(last_point[0], last_point[1], first_point[0], first_point[1]);
     
-    if (close_dist < 50 && ds_list_size(shape_path_points) > 15) {
-        // Show connection hint
+    // Show closing hint when near start
+    if (close_dist < 50 && ds_list_size(shape_path_points) > 8) {
+        // Pulsing green line to start point
         draw_set_alpha(0.5 + sin(current_time * 0.01) * 0.3);
         draw_set_color(c_lime);
-        draw_line_width(last_point[0], last_point[1], first_point[0], first_point[1], 2);
-        draw_circle(first_point[0], first_point[1], 8, false);
+        draw_line_width(last_point[0], last_point[1], first_point[0], first_point[1], 3);
+        
+        // Big green circle at start point
+        draw_set_alpha(0.8);
+        draw_circle(first_point[0], first_point[1], 10 + sin(current_time * 0.01) * 2, false);
+        
+        // "CLOSE HERE!" text
+        draw_set_color(c_white);
+        draw_set_alpha(1);
+        draw_text(first_point[0] - 30, first_point[1] - 25, "CLOSE!");
     }
 }
 

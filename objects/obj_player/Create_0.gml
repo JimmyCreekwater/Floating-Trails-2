@@ -175,3 +175,8 @@ shape_flash_list = ds_list_create(); // Store completed shapes for animation
 
 // XP particle system
 global.xp_particles = ds_list_create();
+
+// ADD to obj_player Create Event:
+
+// Shape detection helpers
+stop_timer = 0;

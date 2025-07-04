@@ -466,6 +466,17 @@ if (ds_list_size(shape_path_points) == 0 ||
     }
 }
 
+// AUTO-CLEAR old path points
+if (ds_list_size(shape_path_points) > 0) {
+    var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+    var time_since_last = current_time - last_point[2];
+    
+    // If more than 2 seconds since last point, clear the path
+    if (time_since_last > 2000) {
+        ds_list_clear(shape_path_points);
+    }
+}
+
 // Track path for shape detection
 if (ds_list_size(shape_path_points) == 0) {
     // First point
@@ -486,7 +497,24 @@ if (ds_list_size(shape_path_points) == 0) {
         }
     }
 }
-        
+        } else {
+    // Not drawing - clear path if we have points
+    if (ds_list_size(shape_path_points) > 0) {
+        // Check if we've stopped for more than 30 frames
+        if (!drawing_enabled || current_speed <= 0.5) {
+            if (!variable_instance_exists(id, "stop_timer")) {
+                stop_timer = 0;
+            }
+            stop_timer++;
+            
+            if (stop_timer > 30) {
+                ds_list_clear(shape_path_points);
+                stop_timer = 0;
+                show_debug_message("Path cleared - stopped drawing");
+            }
+        }
+    }
+}
         last_paint_x = x;
         last_paint_y = y;
     }
@@ -732,4 +760,37 @@ if (keyboard_check_pressed(ord("T"))) {
     show_debug_message("Total painted pixels: " + string(global.total_pixels_painted));
     show_debug_message("Player XP: " + string(ink_xp));
     show_debug_message("Player Level: " + string(player_level));
+}
+
+// ADD to obj_player Step Event (at the very end):
+
+// K KEY: Force create a test shape at current position
+if (keyboard_check_pressed(ord("K"))) {
+    show_debug_message("=== FORCING TEST SHAPE ===");
+    
+    // Create a fake circular path
+    ds_list_clear(shape_path_points);
+    
+    var radius = 50;
+    var points = 20;
+    
+    for (var i = 0; i < points; i++) {
+        var angle = (i / points) * 360;
+        var px = x + lengthdir_x(radius, angle);
+        var py = y + lengthdir_y(radius, angle);
+        var point = [px, py, 0];
+        ds_list_add(shape_path_points, point);
+    }
+    
+    // Force detection
+    var result = scr_detect_closed_shape();
+    show_debug_message("Force test result: " + string(result));
+    
+    if (result > 0) {
+        // Also force the rewards
+        ink_xp += 50;
+        gems += 1;
+        reward_notification = "TEST SHAPE! +50 XP, +1 Gem";
+        reward_notification_timer = 180;
+    }
 }
