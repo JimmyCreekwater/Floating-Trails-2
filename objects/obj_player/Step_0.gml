@@ -250,26 +250,34 @@ if (living_weave_active && living_weave_unlocked) {
                 draw_line_width(beat_x1, beat_y1, beat_x2, beat_y2, final_brush_size * 3);
             }
 			
-			// Shape detection check
+// Shape detection check
 if (drawing_enabled && shape_check_cooldown <= 0) {
-    shape_check_cooldown = 10; // Check every 10 frames
+    shape_check_cooldown = 30; // Check every half second
     
-    var detected_area = scr_detect_closed_shape();
-    if (detected_area > 0) {
-        // Shape completed! Award rewards
-        var bonus_xp = 50 + floor(detected_area / 100); // Bonus for larger shapes
-        ink_xp += bonus_xp;
-        gems += 1;
+    // Check if we're drawing a recognized shape
+    current_shape_preview = scr_recognize_shape();
+    
+    // Check if shape is complete (back at start)
+    if (ds_list_size(shape_path_points) > 8) {
+        var first = ds_list_find_value(shape_path_points, 0);
+        var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+        var close_dist = point_distance(first[0], first[1], last[0], last[1]);
         
-        // Show notification
-        reward_notification = "SHAPE COMPLETE! +" + string(bonus_xp) + " XP, +1 Gem";
-        reward_notification_timer = 180;
-        
-        // Check for level up
-        if (player_level < 10 && ink_xp >= xp_needed[player_level]) {
-            player_level++;
-            just_leveled_up = true;
-            level_up_timer = 120;
+        if (close_dist < 30 && current_shape_preview != "") {
+            // Shape completed!
+            var shape_value = global.shape_points[? current_shape_preview];
+            ink_xp += shape_value;
+            gems += floor(shape_value / 50);
+            
+            reward_notification = current_shape_preview + " COMPLETE! +" + string(shape_value) + " XP";
+            reward_notification_timer = 180;
+            
+            // Create visual effect
+            create_shape_completion_effect(current_shape_preview);
+            
+            // Clear path
+            ds_list_clear(shape_path_points);
+            current_shape_preview = "";
         }
     }
 }
