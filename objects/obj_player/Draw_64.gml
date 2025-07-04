@@ -1,3 +1,40 @@
+// REAL-TIME DEBUG INFO
+draw_set_color(c_white);
+draw_set_alpha(1);
+draw_set_halign(fa_left);
+var debug_y = 300;
+
+draw_text(20, debug_y, "=== SHAPE DEBUG ===");
+draw_text(20, debug_y + 20, "Path Points: " + string(ds_list_size(shape_path_points)));
+draw_text(20, debug_y + 40, "Drawing: " + (drawing_enabled ? "YES" : "NO"));
+draw_text(20, debug_y + 60, "Speed: " + string_format(current_speed, 1, 2));
+
+if (ds_list_size(shape_path_points) > 0) {
+    var first = ds_list_find_value(shape_path_points, 0);
+    var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+    var dist = point_distance(first[0], first[1], last[0], last[1]);
+    draw_text(20, debug_y + 80, "Distance to close: " + string(floor(dist)));
+    
+    // Show bounds
+    var min_x = 999999, max_x = -999999;
+    var min_y = 999999, max_y = -999999;
+    
+    for (var i = 0; i < ds_list_size(shape_path_points); i++) {
+        var point = ds_list_find_value(shape_path_points, i);
+        min_x = min(min_x, point[0]);
+        max_x = max(max_x, point[0]);
+        min_y = min(min_y, point[1]);
+        max_y = max(max_y, point[1]);
+    }
+    
+    var width = max_x - min_x;
+    var height = max_y - min_y;
+    draw_text(20, debug_y + 100, "Size: " + string(floor(width)) + " x " + string(floor(height)));
+}
+
+draw_text(20, debug_y + 120, "Current Shape: " + current_shape_preview);
+draw_text(20, debug_y + 140, "Check Cooldown: " + string(shape_check_cooldown));
+
 // REPLACE ENTIRE obj_player Draw_64.gml with this icon-based UI design
 
 // Get GUI dimensions

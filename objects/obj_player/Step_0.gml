@@ -257,28 +257,32 @@ if (drawing_enabled && shape_check_cooldown <= 0) {
     // Check if we're drawing a recognized shape
     current_shape_preview = scr_recognize_shape();
     
-    // Check if shape is complete (back at start)
-    if (ds_list_size(shape_path_points) > 8) {
-        var first = ds_list_find_value(shape_path_points, 0);
-        var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
-        var close_dist = point_distance(first[0], first[1], last[0], last[1]);
+// Shape detection check
+if (drawing_enabled && shape_check_cooldown <= 0) {
+    shape_check_cooldown = 30; // Check every half second
+    
+    // Check what shape we're drawing
+    current_shape_preview = scr_recognize_shape();
+}
+if (shape_check_cooldown > 0) shape_check_cooldown--;
+
+// Check if shape is complete
+if (current_shape_preview == "Circle" && ds_list_size(shape_path_points) > 8) {
+    var first = ds_list_find_value(shape_path_points, 0);
+    var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+    var close_dist = point_distance(first[0], first[1], last[0], last[1]);
+    
+    if (close_dist < 30) {
+        // Circle completed!
+        ink_xp += 100;
+        gems += 2;
         
-        if (close_dist < 30 && current_shape_preview != "") {
-            // Shape completed!
-            var shape_value = global.shape_points[? current_shape_preview];
-            ink_xp += shape_value;
-            gems += floor(shape_value / 50);
-            
-            reward_notification = current_shape_preview + " COMPLETE! +" + string(shape_value) + " XP";
-            reward_notification_timer = 180;
-            
-            // Create visual effect
-            create_shape_completion_effect(current_shape_preview);
-            
-            // Clear path
-            ds_list_clear(shape_path_points);
-            current_shape_preview = "";
-        }
+        reward_notification = "CIRCLE COMPLETE! +100 XP";
+        reward_notification_timer = 180;
+        
+        // Clear path
+        ds_list_clear(shape_path_points);
+        current_shape_preview = "";
     }
 }
 if (shape_check_cooldown > 0) shape_check_cooldown--;
@@ -552,61 +556,6 @@ if (drawing_enabled && current_speed > 0.5) {
     last_paint_y = y;
 }
 
-// AUTO-CLEAR old path points
-if (ds_list_size(shape_path_points) > 0) {
-    var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
-    var time_since_last = current_time - last_point[2];
-    
-    // If more than 2 seconds since last point, clear the path
-    if (time_since_last > 2000) {
-        ds_list_clear(shape_path_points);
-    }
-}
-
-// Track path for shape detection
-if (ds_list_size(shape_path_points) == 0) {
-    // First point
-    var path_point = [x, y, current_time];
-    ds_list_add(shape_path_points, path_point);
-} else {
-    // Add new point if we've moved enough
-    var last_path_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
-    var dist_from_last = point_distance(x, y, last_path_point[0], last_path_point[1]);
-    
-    if (dist_from_last > 10) {
-        var path_point = [x, y, current_time];
-        ds_list_add(shape_path_points, path_point);
-        
-        // Limit path length
-        while (ds_list_size(shape_path_points) > max_path_points) {
-            ds_list_delete(shape_path_points, 0);
-        }
-    }
-}
-        } else {
-    // Not drawing - clear path if we have points
-    if (ds_list_size(shape_path_points) > 0) {
-        // Check if we've stopped for more than 30 frames
-        if (!drawing_enabled || current_speed <= 0.5) {
-            if (!variable_instance_exists(id, "stop_timer")) {
-                stop_timer = 0;
-            }
-            stop_timer++;
-            
-            if (stop_timer > 30) {
-                ds_list_clear(shape_path_points);
-                stop_timer = 0;
-                show_debug_message("Path cleared - stopped drawing");
-            }
-        }
-    }
-}
-
-        last_paint_x = x;
-        last_paint_y = y;
-
-
-
 // Q KEY SPARKLE BEAM: Manual activation system
 if (keyboard_check_pressed(ord("Q")) && sparkle_pulse_unlocked && sparkle_pulse_active && pulse_generation_cooldown <= 0) {
     // Create beam at current position
@@ -766,27 +715,6 @@ if (speed_sample_timer >= speed_sample_interval) {
     speed_sample_timer = 0;
 }
 
-// Shape detection check
-<!-- last_shape_check++; -->
-<!-- if (last_shape_check >= shape_check_interval) { -->
-    <!-- last_shape_check = 0; -->
-    
-    <!-- var detected_shape_size = scr_detect_shapes(); -->
-    <!-- if (detected_shape_size > 0) { -->
-        <!-- ink_xp += 50; -->
-        <!-- gems += 1; -->
-        
-        <!-- reward_notification = "SHAPE COMPLETED! +50 XP, +1 Gem"; -->
-        <!-- reward_notification_timer = 180; -->
-        
-        <!-- if (player_level < 10 && ink_xp >= xp_needed[player_level]) { -->
-            <!-- player_level++; -->
-            <!-- just_leveled_up = true; -->
-            <!-- level_up_timer = 120; -->
-        <!-- } -->
-    <!-- } -->
-<!-- } -->
-
 // N KEY: Neon trail toggle
 if (keyboard_check_pressed(ord("N")) && neon_trail_unlocked) {
     neon_trail_active = !neon_trail_active;
@@ -880,5 +808,16 @@ if (keyboard_check_pressed(ord("K"))) {
         gems += 1;
         reward_notification = "TEST SHAPE! +50 XP, +1 Gem";
         reward_notification_timer = 180;
+    }
+}
+
+// DEBUG: Show current shape detection
+if (keyboard_check(ord("L"))) {
+    show_debug_message("Current shape preview: " + current_shape_preview);
+    show_debug_message("Path points: " + string(ds_list_size(shape_path_points)));
+    if (ds_list_size(shape_path_points) > 0) {
+        var first = ds_list_find_value(shape_path_points, 0);
+        var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+        show_debug_message("Distance to close: " + string(point_distance(first[0], first[1], last[0], last[1])));
     }
 }
