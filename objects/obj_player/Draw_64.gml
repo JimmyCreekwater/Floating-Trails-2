@@ -388,3 +388,74 @@ if (keyboard_check(ord("H"))) {
     draw_text(20, 300, "Min points needed: 20");
     draw_text(20, 320, "Close distance: < 20 pixels");
 }
+
+// SHAPE GALLERY (Right side of screen)
+var gallery_x = gui_width - 250;
+var gallery_y = 100;
+var gallery_width = 230;
+var gallery_height = gui_height - 300;
+
+// Background
+draw_set_color(c_black);
+draw_set_alpha(0.7);
+draw_roundrect(gallery_x, gallery_y, gallery_x + gallery_width, gallery_y + gallery_height, false);
+
+// Title
+draw_set_color(c_white);
+draw_set_alpha(1);
+draw_set_halign(fa_center);
+draw_text_transformed(gallery_x + gallery_width/2, gallery_y + 10, "SHAPES", 1.5, 1.5, 0);
+
+// Community shape (always at top)
+var community_y = gallery_y + 40;
+draw_set_color(c_yellow);
+draw_roundrect(gallery_x + 10, community_y, gallery_x + gallery_width - 10, community_y + 80, false);
+
+draw_set_color(c_black);
+draw_text(gallery_x + gallery_width/2, community_y + 20, "COMMUNITY SHAPE");
+draw_text(gallery_x + gallery_width/2, community_y + 40, current_community_shape);
+draw_text(gallery_x + gallery_width/2, community_y + 60, "200 XP");
+
+// Scrollable shape list
+var list_y = community_y + 100;
+var shape_height = 60;
+var visible_shapes = floor((gallery_height - 150) / shape_height);
+
+// Get shape list
+var shapes = ["Square", "Triangle", "Circle", "Star"];
+
+// Draw shapes with scroll
+for (var i = 0; i < array_length(shapes); i++) {
+    var shape_y = list_y + (i * shape_height) - shapes_scroll_offset;
+    
+    // Skip if outside visible area
+    if (shape_y < list_y - shape_height || shape_y > gallery_y + gallery_height) continue;
+    
+    var shape_name = shapes[i];
+    var shape_points = global.shape_points[? shape_name];
+    
+    // Hover effect
+    var hover = (mouse_x >= gallery_x + 10 && mouse_x <= gallery_x + gallery_width - 10 &&
+                 mouse_y >= shape_y && mouse_y <= shape_y + shape_height - 5);
+    
+    draw_set_alpha(hover ? 0.9 : 0.6);
+    draw_set_color(hover ? c_white : c_gray);
+    draw_roundrect(gallery_x + 10, shape_y, gallery_x + gallery_width - 10, shape_y + shape_height - 5, false);
+    
+    // Shape preview (simplified)
+    draw_set_color(c_black);
+    draw_set_alpha(1);
+    // Draw mini shape icon here based on type
+    
+    draw_text(gallery_x + gallery_width/2, shape_y + 20, shape_name);
+    draw_text(gallery_x + gallery_width/2, shape_y + 40, string(shape_points) + " XP");
+}
+
+// Current shape preview
+if (current_shape_preview != "") {
+    draw_set_halign(fa_center);
+    draw_set_color(c_lime);
+    draw_text_transformed(gui_width/2, 100, "Drawing: " + current_shape_preview, 2, 2, 0);
+}
+
+draw_set_halign(fa_left);

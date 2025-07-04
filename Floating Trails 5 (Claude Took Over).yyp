@@ -47,6 +47,8 @@
     {"id":{"name":"scr_detect_shapes","path":"scripts/scr_detect_shapes/scr_detect_shapes.yy",},},
     {"id":{"name":"scr_networking","path":"scripts/scr_networking/scr_networking.yy",},},
     {"id":{"name":"scr_player_movement","path":"scripts/scr_player_movement/scr_player_movement.yy",},},
+    {"id":{"name":"scr_recognize_shape","path":"scripts/scr_recognize_shape/scr_recognize_shape.yy",},},
+    {"id":{"name":"scr_shape_templates","path":"scripts/scr_shape_templates/scr_shape_templates.yy",},},
     {"id":{"name":"spr_player","path":"sprites/spr_player/spr_player.yy",},},
   ],
   "resourceType":"GMProject",

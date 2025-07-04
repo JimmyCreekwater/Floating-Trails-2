@@ -180,3 +180,5 @@ global.xp_particles = ds_list_create();
 
 // Shape detection helpers
 stop_timer = 0;
+// Shape recognition
+current_shape_preview = "";

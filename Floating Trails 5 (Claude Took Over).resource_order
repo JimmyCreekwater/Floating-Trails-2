@@ -27,5 +27,7 @@
     {"name":"scr_detect_closed_shape","order":4,"path":"scripts/scr_detect_closed_shape/scr_detect_closed_shape.yy",},
     {"name":"scr_detect_shapes","order":3,"path":"scripts/scr_detect_shapes/scr_detect_shapes.yy",},
     {"name":"scr_player_movement","order":2,"path":"scripts/scr_player_movement/scr_player_movement.yy",},
+    {"name":"scr_recognize_shape","order":7,"path":"scripts/scr_recognize_shape/scr_recognize_shape.yy",},
+    {"name":"scr_shape_templates","order":6,"path":"scripts/scr_shape_templates/scr_shape_templates.yy",},
   ],
 }

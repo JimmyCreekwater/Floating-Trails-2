@@ -468,6 +468,8 @@ if (ds_list_size(shape_path_points) == 0 ||
     while (ds_list_size(shape_path_points) > max_path_points) {
         ds_list_delete(shape_path_points, 0);
     }
+	last_paint_x = x;
+    last_paint_y = y;
 }
 
 // AUTO-CLEAR old path points

@@ -91,3 +91,12 @@ shape_fill_surface = surface_create(canvas_width, canvas_height);
 surface_set_target(shape_fill_surface);
 draw_clear_alpha(c_black, 0);
 surface_reset_target();
+
+// Initialize shape templates
+scr_shape_templates();
+
+// Shape UI
+shapes_scroll_offset = 0;
+selected_shape_hover = "";
+community_shape_timer = 120 * 60; // 2 minutes
+current_community_shape = "Star"; // Placeholder
