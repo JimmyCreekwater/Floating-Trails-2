@@ -56,17 +56,47 @@ function scr_detect_closed_shape() {
         if (area >= 1600) { // 40x40 = 1600
             // Valid shape detected! Create flash effect
             var shape_data = [
-                shape_points,           // Point list
-                (min_x + max_x) / 2,   // Center X
-                (min_y + max_y) / 2,   // Center Y
-                max_x - min_x,         // Width
-                max_y - min_y,         // Height
-                my_trail_color,        // Color
-                120,                    // Animation timer
-                area                   // Shape area
+                shape_points,           // [0] Point list
+                (min_x + max_x) / 2,   // [1] Center X
+                (min_y + max_y) / 2,   // [2] Center Y
+                max_x - min_x,         // [3] Width
+                max_y - min_y,         // [4] Height
+                my_trail_color,        // [5] Color
+                120,                   // [6] Animation timer (2 seconds)
+                area,                  // [7] Shape area
+                1.0,                   // [8] Fill alpha (starts at 1)
+                false                  // [9] Has spawned particles
             ];
             
             ds_list_add(shape_flash_list, shape_data);
+            
+            // Draw the filled shape on the shape surface
+            if (surface_exists(obj_game.shape_fill_surface)) {
+                surface_set_target(obj_game.shape_fill_surface);
+                
+                draw_set_color(my_trail_color);
+                draw_set_alpha(0.8);
+                
+                // Draw filled polygon
+                var n = ds_list_size(shape_points);
+                if (n > 2) {
+                    // Use path for better fill
+                    draw_primitive_begin(pr_trianglefan);
+                    
+                    // Center point
+                    draw_vertex((min_x + max_x) / 2, (min_y + max_y) / 2);
+                    
+                    // Edge points
+                    for (var i = 0; i <= n; i++) {
+                        var p = ds_list_find_value(shape_points, i % n);
+                        draw_vertex(p[0], p[1]);
+                    }
+                    
+                    draw_primitive_end();
+                }
+                
+                surface_reset_target();
+            }
             
             // Clear the path to prevent re-detection
             ds_list_clear(shape_path_points);

@@ -169,3 +169,13 @@ max_path_points = 200; // Keep last 200 points
 shape_check_cooldown = 0;
 shape_flash_list = ds_list_create(); // Store completed shapes for animation
 
+// ADD THIS TO obj_game Create Event (at the end):
+
+// Shape fill surface for visual effects
+shape_fill_surface = surface_create(canvas_width, canvas_height);
+surface_set_target(shape_fill_surface);
+draw_clear_alpha(c_black, 0);
+surface_reset_target();
+
+// XP particle system
+global.xp_particles = ds_list_create();

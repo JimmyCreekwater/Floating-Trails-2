@@ -122,6 +122,50 @@ with (obj_shard) {
         draw_text(minimap_x, minimap_y + minimap_size + 5, "Click to expand");
     }
     
+	// ADD THIS TO obj_game Draw_64.gml (at the very end, before resetting draw settings):
+
+// Draw XP particles flying to UI
+for (var i = 0; i < ds_list_size(global.xp_particles); i++) {
+    var particle = ds_list_find_value(global.xp_particles, i);
+    
+    if (particle[12] > 0) continue; // Skip if still delayed
+    
+    var px = particle[0];
+    var py = particle[1];
+    var progress = particle[6];
+    var p_color = particle[10];
+    var p_type = particle[11];
+    
+    // Particle size based on progress
+    var size = 8 * (1 - progress * 0.5);
+    
+    // Draw glow
+    draw_set_color(p_color);
+    draw_set_alpha(0.3 * (1 - progress));
+    draw_circle(px, py, size * 2, false);
+    
+    // Draw core
+    draw_set_alpha(0.8 * (1 - progress * 0.5));
+    draw_circle(px, py, size, false);
+    
+    // Draw symbol
+    draw_set_color(c_white);
+    draw_set_alpha(1 * (1 - progress * 0.5));
+    draw_set_halign(fa_center);
+    draw_set_valign(fa_middle);
+    
+    if (p_type == "XP") {
+        draw_text_transformed(px, py, "+", 1.5, 1.5, 0);
+    } else if (p_type == "GEM") {
+        draw_text_transformed(px, py, "★", 1.2, 1.2, 0);
+    }
+}
+
+// Reset alignment
+draw_set_halign(fa_left);
+draw_set_valign(fa_top);
+draw_set_alpha(1);
+	
     // Reset drawing settings
     draw_set_color(c_white);
     draw_set_alpha(1);

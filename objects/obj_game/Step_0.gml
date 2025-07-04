@@ -21,6 +21,16 @@ if (keyboard_check_pressed(ord("C")) && keyboard_check(vk_control)) {
     surface_reset_target();
 }
 
+// ADD THIS TO obj_game Step Event (after the trail_canvas surface check):
+
+// Recreate shape fill surface if lost
+if (!surface_exists(shape_fill_surface)) {
+    shape_fill_surface = surface_create(canvas_width, canvas_height);
+    surface_set_target(shape_fill_surface);
+    draw_clear_alpha(c_black, 0);
+    surface_reset_target();
+}
+
 // NEW: Camera following player
 if (instance_exists(obj_player)) {
     // Smooth camera following
