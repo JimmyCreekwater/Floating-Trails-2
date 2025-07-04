@@ -3,6 +3,127 @@
 // Draw player sprite
 draw_self();
 
+// REPLACE the shape completion flash effects section in obj_player Draw_0.gml with:
+
+// Draw shape completion effects from surface
+if (surface_exists(obj_game.shape_fill_surface)) {
+    // Update shape fills on surface
+    surface_set_target(obj_game.shape_fill_surface);
+    
+    // Clear faded shapes
+    draw_set_blend_mode(bm_subtract);
+    draw_set_color(c_white);
+    draw_set_alpha(0.02); // Slow fade
+    draw_rectangle(0, 0, room_width, room_height, false);
+    draw_set_blend_mode(bm_normal);
+    
+    surface_reset_target();
+    
+    // Draw the surface
+    draw_surface(obj_game.shape_fill_surface, 0, 0);
+}
+
+// Draw shape outlines and effects
+for (var i = 0; i < ds_list_size(shape_flash_list); i++) {
+    var shape_data = ds_list_find_value(shape_flash_list, i);
+    var shape_points = shape_data[0];
+    var center_x = shape_data[1];
+    var center_y = shape_data[2];
+    var shape_width = shape_data[3];
+    var shape_height = shape_data[4];
+    var shape_color = shape_data[5];
+    var timer = shape_data[6];
+    var fill_alpha = shape_data[8];
+    
+    // Calculate animation progress
+    var progress = 1 - (timer / 120);
+    
+    // Draw shape outline with glow
+    if (timer > 60) {
+        draw_set_color(shape_color);
+        draw_set_alpha(0.8 * fill_alpha);
+        
+        // Draw outline
+        for (var j = 0; j < ds_list_size(shape_points) - 1; j++) {
+            var p1 = ds_list_find_value(shape_points, j);
+            var p2 = ds_list_find_value(shape_points, j + 1);
+            draw_line_width(p1[0], p1[1], p2[0], p2[1], 3);
+        }
+        
+        // Close the shape
+        var first = ds_list_find_value(shape_points, 0);
+        var last = ds_list_find_value(shape_points, ds_list_size(shape_points) - 1);
+        draw_line_width(last[0], last[1], first[0], first[1], 3);
+    }
+    
+    // Expanding ring effect
+    if (timer > 90) {
+        var ring_progress = (120 - timer) / 30;
+        draw_set_alpha(0.5 * (1 - ring_progress));
+        draw_set_color(c_white);
+        var ring_radius = ring_progress * max(shape_width, shape_height) * 0.7;
+        draw_circle(center_x, center_y, ring_radius, true);
+    }
+    
+    // Success sparkles in first half second
+    if (timer > 90) {
+        draw_set_alpha(0.8);
+        for (var angle = 0; angle < 360; angle += 60) {
+            var sparkle_dist = 20 + (120 - timer);
+            var sparkle_x = center_x + lengthdir_x(sparkle_dist, angle + timer * 3);
+            var sparkle_y = center_y + lengthdir_y(sparkle_dist, angle + timer * 3);
+            
+            draw_set_color(c_white);
+            draw_circle(sparkle_x, sparkle_y, 4, false);
+            draw_set_color(shape_color);
+            draw_circle(sparkle_x, sparkle_y, 2, false);
+        }
+    }
+}
+
+// Draw path preview when drawing (keep existing code)
+if (drawing_enabled && ds_list_size(shape_path_points) > 1) {
+    draw_set_alpha(0.3);
+    draw_set_color(c_white);
+    
+    // Check if path might close soon
+    var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+    var first_point = ds_list_find_value(shape_path_points, 0);
+    var close_dist = point_distance(last_point[0], last_point[1], first_point[0], first_point[1]);
+    
+    if (close_dist < 50 && ds_list_size(shape_path_points) > 15) {
+        // Show connection hint
+        draw_set_alpha(0.5 + sin(current_time * 0.01) * 0.3);
+        draw_set_color(c_lime);
+        draw_line_width(last_point[0], last_point[1], first_point[0], first_point[1], 2);
+        draw_circle(first_point[0], first_point[1], 8, false);
+    }
+}
+
+draw_set_alpha(1);
+draw_set_color(c_white);
+// Draw path preview when drawing
+if (drawing_enabled && ds_list_size(shape_path_points) > 1) {
+    draw_set_alpha(0.3);
+    draw_set_color(c_white);
+    
+    // Check if path might close soon
+    var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+    var first_point = ds_list_find_value(shape_path_points, 0);
+    var close_dist = point_distance(last_point[0], last_point[1], first_point[0], first_point[1]);
+    
+    if (close_dist < 50 && ds_list_size(shape_path_points) > 15) {
+        // Show connection hint
+        draw_set_alpha(0.5 + sin(current_time * 0.01) * 0.3);
+        draw_set_color(c_lime);
+        draw_line_width(last_point[0], last_point[1], first_point[0], first_point[1], 2);
+        draw_circle(first_point[0], first_point[1], 8, false);
+    }
+}
+
+draw_set_alpha(1);
+draw_set_color(c_white);
+
 // REPLACE the Living Wave Animation section in Draw_0.gml with this:
 
 // PERMANENT LIVING WAVE ANIMATIONS

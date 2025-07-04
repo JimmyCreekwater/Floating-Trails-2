@@ -5,6 +5,14 @@ if (!surface_exists(trail_canvas)) {
     draw_clear_alpha(c_black, 0);
     surface_reset_target();
 }
+
+// Recreate shape fill surface if lost
+if (!surface_exists(shape_fill_surface)) {
+    shape_fill_surface = surface_create(canvas_width, canvas_height);
+    surface_set_target(shape_fill_surface);
+    draw_clear_alpha(c_black, 0);
+    surface_reset_target();
+}
 // Canvas controls
 if (keyboard_check_pressed(ord("C")) && keyboard_check(vk_control)) {
     // Clear canvas with Ctrl+C
@@ -28,6 +36,9 @@ if (instance_exists(obj_player)) {
 }
 
 
+// UPDATE the minimap click detection in obj_game Step Event:
+// Find the section that checks for minimap clicks and replace with:
+
 // RELIABLE: Check for minimap clicks in Step Event
 if (mouse_check_button_pressed(mb_left) && instance_exists(obj_player)) {
     var gui_width = display_get_gui_width();
@@ -38,28 +49,17 @@ if (mouse_check_button_pressed(mb_left) && instance_exists(obj_player)) {
     var gui_mouse_y = device_mouse_y_to_gui(0);
     
     if (minimap_expanded) {
-        // Large minimap (center of screen)
-        var large_size = min(gui_width, gui_height) * 0.9;
-        var large_x = (gui_width - large_size) / 2;
-        var large_y = (gui_height - large_size) / 2;
-        
-        // Check if clicked on large minimap
-        if (gui_mouse_x >= large_x && gui_mouse_x <= large_x + large_size &&
-            gui_mouse_y >= large_y && gui_mouse_y <= large_y + large_size) {
-            minimap_expanded = false;
-            show_debug_message("Large minimap clicked - collapsing!");
-        }
+        // Click anywhere to close when expanded
+        minimap_expanded = false;
     } else {
-        // Small minimap (top-right)
-        var small_size = 180;
-        var small_x = gui_width - small_size - 20;
-        var small_y = 20;
+        // Check if clicked on small minimap (top-left now)
+        var minimap_size = 220;
+        var minimap_x = 20;
+        var minimap_y = 20;
         
-        // Check if clicked on small minimap
-        if (gui_mouse_x >= small_x && gui_mouse_x <= small_x + small_size &&
-            gui_mouse_y >= small_y && gui_mouse_y <= small_y + small_size) {
+        if (gui_mouse_x >= minimap_x && gui_mouse_x <= minimap_x + minimap_size &&
+            gui_mouse_y >= minimap_y && gui_mouse_y <= minimap_y + minimap_size) {
             minimap_expanded = true;
-            show_debug_message("Small minimap clicked - expanding!");
         }
     }
 }
@@ -117,4 +117,39 @@ if (keyboard_check_pressed(vk_escape) && window_get_fullscreen()) {
     
     window_set_size(window_w, window_h);
     window_center();
+}
+
+// ===== DYNAMIC VIEWPORT SCALING =====
+// Update viewport when window size changes
+var current_width = window_get_width();
+var current_height = window_get_height();
+
+if (current_width != view_wport[0] || current_height != view_hport[0]) {
+    // Window size changed - update viewport
+    view_xport[0] = 0;
+    view_yport[0] = 0;
+    view_wport[0] = current_width;
+    view_hport[0] = current_height;
+    
+    // Recalculate camera view
+    var base_view_width = 1366;
+    var base_view_height = 768;
+    var display_aspect = current_width / current_height;
+    var base_aspect = base_view_width / base_view_height;
+    
+    if (display_aspect > base_aspect) {
+        // Wider screen
+        view_hview[0] = base_view_height;
+        view_wview[0] = base_view_height * display_aspect;
+    } else {
+        // Taller screen
+        view_wview[0] = base_view_width;
+        view_hview[0] = base_view_width / display_aspect;
+    }
+    
+    // Update camera
+    camera_set_view_size(view_camera[0], view_wview[0], view_hview[0]);
+    
+    // Update GUI scaling
+    display_set_gui_maximise();
 }

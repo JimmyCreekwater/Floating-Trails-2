@@ -1,3 +1,9 @@
+// ===== DRAW APPLICATION SURFACE =====
+// This ensures the game fills the entire screen
+if (surface_exists(application_surface)) {
+    draw_surface_stretched(application_surface, 0, 0, display_get_gui_width(), display_get_gui_height());
+}
+
 // REPLACE the entire obj_game Draw_64.gml with this updated minimap:
 
 // Interactive expandable minimap (TOP-LEFT)

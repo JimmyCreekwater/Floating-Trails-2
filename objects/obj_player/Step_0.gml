@@ -7,6 +7,20 @@ scr_player_movement();
 // Camera control
 scr_camera_control();
 
+// SPACE KEY: Toggle drawing on/off
+if (keyboard_check_pressed(vk_space) && drawing_toggle_cooldown <= 0) {
+    drawing_enabled = !drawing_enabled;
+    reward_notification = drawing_enabled ? "Drawing ON" : "Drawing OFF (Move Only)";
+    reward_notification_timer = 60;
+    drawing_toggle_cooldown = 15;
+    
+    // Clear path when toggling off
+    if (!drawing_enabled) {
+        ds_list_clear(shape_path_points);
+    }
+}
+if (drawing_toggle_cooldown > 0) drawing_toggle_cooldown--;
+
 // Detect disconnection for autonomous art mode
 if (!instance_exists(obj_game) || global.client < 0) {
     if (player_connected) {
@@ -20,7 +34,7 @@ if (!instance_exists(obj_game) || global.client < 0) {
 }
 
 // Paint trails when moving (PERMANENT LIVING ART SYSTEM)
-if (current_speed > 0.5) {
+if (current_speed > 0.5 && drawing_enabled) {
     var paint_distance = point_distance(x, y, last_paint_x, last_paint_y);
     var paint_threshold = max(1, 3 - current_speed);
     
@@ -231,6 +245,43 @@ if (living_weave_active && living_weave_unlocked) {
                 
                 draw_line_width(beat_x1, beat_y1, beat_x2, beat_y2, final_brush_size * 3);
             }
+			
+			// Shape detection check
+if (drawing_enabled && shape_check_cooldown <= 0) {
+    shape_check_cooldown = 10; // Check every 10 frames
+    
+    var detected_area = scr_detect_closed_shape();
+    if (detected_area > 0) {
+        // Shape completed! Award rewards
+        var bonus_xp = 50 + floor(detected_area / 100); // Bonus for larger shapes
+        ink_xp += bonus_xp;
+        gems += 1;
+        
+        // Show notification
+        reward_notification = "SHAPE COMPLETE! +" + string(bonus_xp) + " XP, +1 Gem";
+        reward_notification_timer = 180;
+        
+        // Check for level up
+        if (player_level < 10 && ink_xp >= xp_needed[player_level]) {
+            player_level++;
+            just_leveled_up = true;
+            level_up_timer = 120;
+        }
+    }
+}
+if (shape_check_cooldown > 0) shape_check_cooldown--;
+
+// Update shape flash animations
+for (var i = ds_list_size(shape_flash_list) - 1; i >= 0; i--) {
+    var shape_data = ds_list_find_value(shape_flash_list, i);
+    shape_data[6]--; // Decrease timer
+    
+    if (shape_data[6] <= 0) {
+        // Cleanup shape points list
+        ds_list_destroy(shape_data[0]);
+        ds_list_delete(shape_flash_list, i);
+    }
+}
             
             // Core pulse
             draw_set_alpha(0.8);
@@ -358,6 +409,21 @@ if (living_weave_active && living_weave_unlocked) {
                 }
             }
         }
+		
+		// Track path for shape detection
+if (ds_list_size(shape_path_points) == 0 || 
+    point_distance(x, y, 
+        ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1)[0],
+        ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1)[1]) > 10) {
+    
+    var path_point = [x, y, current_time];
+    ds_list_add(shape_path_points, path_point);
+    
+    // Limit path length
+    while (ds_list_size(shape_path_points) > max_path_points) {
+        ds_list_delete(shape_path_points, 0);
+    }
+}
         
         last_paint_x = x;
         last_paint_y = y;

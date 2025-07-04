@@ -42,6 +42,8 @@
     {"id":{"name":"Room1","path":"rooms/Room1/Room1.yy",},},
     {"id":{"name":"Room3","path":"rooms/Room3/Room3.yy",},},
     {"id":{"name":"scr_camera_control","path":"scripts/scr_camera_control/scr_camera_control.yy",},},
+    {"id":{"name":"scr_create_xp_particles","path":"scripts/scr_create_xp_particles/scr_create_xp_particles.yy",},},
+    {"id":{"name":"scr_detect_closed_shape","path":"scripts/scr_detect_closed_shape/scr_detect_closed_shape.yy",},},
     {"id":{"name":"scr_detect_shapes","path":"scripts/scr_detect_shapes/scr_detect_shapes.yy",},},
     {"id":{"name":"scr_networking","path":"scripts/scr_networking/scr_networking.yy",},},
     {"id":{"name":"scr_player_movement","path":"scripts/scr_player_movement/scr_player_movement.yy",},},

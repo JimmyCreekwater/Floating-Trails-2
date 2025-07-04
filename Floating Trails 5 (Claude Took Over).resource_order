@@ -23,6 +23,8 @@
     {"name":"rm_main","order":1,"path":"rooms/rm_main/rm_main.yy",},
     {"name":"Room3","order":2,"path":"rooms/Room3/Room3.yy",},
     {"name":"scr_camera_control","order":1,"path":"scripts/scr_camera_control/scr_camera_control.yy",},
+    {"name":"scr_create_xp_particles","order":5,"path":"scripts/scr_create_xp_particles/scr_create_xp_particles.yy",},
+    {"name":"scr_detect_closed_shape","order":4,"path":"scripts/scr_detect_closed_shape/scr_detect_closed_shape.yy",},
     {"name":"scr_detect_shapes","order":3,"path":"scripts/scr_detect_shapes/scr_detect_shapes.yy",},
     {"name":"scr_player_movement","order":2,"path":"scripts/scr_player_movement/scr_player_movement.yy",},
   ],

@@ -158,3 +158,14 @@ application_surface_draw_enable(true);
 
 // Start windowed (not fullscreen)
 window_set_fullscreen(false);
+
+// Drawing control
+drawing_enabled = true;
+drawing_toggle_cooldown = 0;
+
+// Shape detection system
+shape_path_points = ds_list_create(); // Track recent drawing path
+max_path_points = 200; // Keep last 200 points
+shape_check_cooldown = 0;
+shape_flash_list = ds_list_create(); // Store completed shapes for animation
+

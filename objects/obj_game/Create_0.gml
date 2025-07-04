@@ -23,14 +23,41 @@ surface_set_target(trail_canvas);
 draw_clear_alpha(c_black, 0); // Transparent background
 surface_reset_target();
 
-// Camera setup for large world
+// Camera setup for large world with dynamic scaling
 view_enabled = true;
 view_visible[0] = true;
+
+// Get current window size
+var window_width = window_get_width();
+var window_height = window_get_height();
+
+// Set viewport to fill entire window
 view_xport[0] = 0;
 view_yport[0] = 0;
-view_wport[0] = 1024;
-view_hport[0] = 768;
-view_camera[0] = camera_create_view(0, 0, 1024, 768);
+view_wport[0] = window_width;
+view_hport[0] = window_height;
+
+// Calculate camera view size to maintain gameplay visibility
+var base_view_width = 1366;
+var base_view_height = 768;
+var display_aspect = window_width / window_height;
+var base_aspect = base_view_width / base_view_height;
+
+if (display_aspect > base_aspect) {
+    // Wider screen - fit height, expand width
+    view_hview[0] = base_view_height;
+    view_wview[0] = base_view_height * display_aspect;
+} else {
+    // Taller screen - fit width, expand height
+    view_wview[0] = base_view_width;
+    view_hview[0] = base_view_width / display_aspect;
+}
+
+// Create camera with calculated view
+view_camera[0] = camera_create_view(0, 0, view_wview[0], view_hview[0]);
+
+// Set GUI to scale with window
+display_set_gui_maximise();
 // Camera properties
 cam_x = room_width / 2;
 cam_y = room_height / 2;
@@ -49,3 +76,13 @@ global.total_pixels_painted = 0;
 global.painted_trail_segments = ds_list_create();
 // Permanent animated wave segments for Living Weave
 global.permanent_wave_segments = ds_list_create();
+
+// Shape fill surface for visual effects
+shape_fill_surface = surface_create(canvas_width, canvas_height);
+surface_set_target(shape_fill_surface);
+draw_clear_alpha(c_black, 0);
+surface_reset_target();
+
+// XP particle system
+global.xp_particles = ds_list_create();
+

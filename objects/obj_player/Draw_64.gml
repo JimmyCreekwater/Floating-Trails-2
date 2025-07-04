@@ -27,11 +27,44 @@ draw_line_width(0, dock_y - 10, gui_width, dock_y - 10, 2);
 var icon_size = 80;
 var icon_padding = 20;
 var icon_y = dock_y + 20;
-var total_abilities = 4; // Color, Neon, Weave, Sparkle
+var total_abilities = 5; // Color, Neon, Weave, Sparkle
 
 // Calculate starting X to center all icons
 var total_width = (icon_size * total_abilities) + (icon_padding * (total_abilities - 1));
 var start_x = (gui_width - total_width) / 2;
+
+// 0. DRAWING STATUS ICON (new first icon)
+var drawing_x = start_x - (icon_size + icon_padding); // Shift everything right
+var center_x = drawing_x + icon_size/2;
+var center_y = icon_y + icon_size/2;
+
+// Adjust start_x to accommodate new icon
+start_x = drawing_x;
+
+// Icon background
+draw_set_color(drawing_enabled ? c_lime : c_dkgray);
+draw_set_alpha(0.8);
+draw_roundrect(drawing_x, icon_y, drawing_x + icon_size, icon_y + icon_size, false);
+
+// Pencil/brush icon
+draw_set_color(c_white);
+draw_set_alpha(drawing_enabled ? 1 : 0.3);
+
+// Simple pencil shape
+draw_line_width(center_x - 15, center_y + 15, center_x + 10, center_y - 10, 4);
+draw_triangle(center_x + 10, center_y - 10, center_x + 15, center_y - 15, center_x + 20, center_y - 5, false);
+
+// Pencil tip
+draw_set_color(drawing_enabled ? my_trail_color : c_gray);
+draw_circle(center_x - 15, center_y + 15, 3, false);
+
+// Text below icon
+draw_set_color(c_white);
+draw_set_alpha(1);
+draw_text(center_x, icon_y + icon_size + 5, "DRAW [SPACE]");
+draw_set_color(drawing_enabled ? c_lime : c_gray);
+draw_text(center_x, icon_y + icon_size + 20, drawing_enabled ? "PAINTING" : "MOVE ONLY");
+
 
 // 1. COLOR PICKER ICON
 var color_x = start_x;
@@ -282,6 +315,7 @@ draw_text(controls_x, controls_y + 20, "SHIFT: Sprint");
 draw_text(controls_x, controls_y + 40, "CTRL: Crouch");
 draw_text(controls_x, controls_y + 60, "TAB: Debug");
 draw_text(controls_x, controls_y + 80, "F11: Fullscreen");
+draw_text(controls_x, controls_y + 100, "SPACE: Toggle Draw");
 
 // ========== NOTIFICATIONS ==========
 draw_set_halign(fa_center);
