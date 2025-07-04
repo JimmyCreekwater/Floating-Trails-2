@@ -3,22 +3,50 @@
 // Draw player sprite
 draw_self();
 
+/ ADD THIS TO obj_player Draw Event (after draw_self()):
+
+// DEBUG: Visualize path points
+if (keyboard_check(ord("H"))) {
+    // Draw all path points
+    draw_set_color(c_yellow);
+    draw_set_alpha(0.8);
+    
+    for (var i = 0; i < ds_list_size(shape_path_points); i++) {
+        var point = ds_list_find_value(shape_path_points, i);
+        draw_circle(point[0], point[1], 3, false);
+        
+        // Draw lines between points
+        if (i > 0) {
+            var prev_point = ds_list_find_value(shape_path_points, i - 1);
+            draw_line(prev_point[0], prev_point[1], point[0], point[1]);
+        }
+    }
+    
+    // Show start and end points
+    if (ds_list_size(shape_path_points) > 0) {
+        var first = ds_list_find_value(shape_path_points, 0);
+        var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+        
+        draw_set_color(c_lime);
+        draw_circle(first[0], first[1], 8, false); // Green = start
+        
+        draw_set_color(c_red);
+        draw_circle(last[0], last[1], 6, false); // Red = current
+        
+        // Show distance to close
+        var dist = point_distance(first[0], first[1], last[0], last[1]);
+        draw_set_color(c_white);
+        draw_text(last[0] + 10, last[1], "Dist: " + string(floor(dist)));
+    }
+    
+    draw_set_alpha(1);
+}
+
+
 // REPLACE the shape completion flash effects section in obj_player Draw_0.gml with:
 
 // Draw shape completion effects from surface
 if (surface_exists(obj_game.shape_fill_surface)) {
-    // Update shape fills on surface
-    surface_set_target(obj_game.shape_fill_surface);
-    
-    // Clear faded shapes
-    draw_set_blend_mode(bm_subtract);
-    draw_set_color(c_white);
-    draw_set_alpha(0.02); // Slow fade
-    draw_rectangle(0, 0, room_width, room_height, false);
-    draw_set_blend_mode(bm_normal);
-    
-    surface_reset_target();
-    
     // Draw the surface
     draw_surface(obj_game.shape_fill_surface, 0, 0);
 }

@@ -86,3 +86,8 @@ surface_reset_target();
 // XP particle system
 global.xp_particles = ds_list_create();
 
+// Shape fill surface for visual effects
+shape_fill_surface = surface_create(canvas_width, canvas_height);
+surface_set_target(shape_fill_surface);
+draw_clear_alpha(c_black, 0);
+surface_reset_target();

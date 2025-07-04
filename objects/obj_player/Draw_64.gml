@@ -375,3 +375,16 @@ draw_set_color(c_white);
 draw_set_alpha(1);
 draw_set_halign(fa_left);
 draw_set_valign(fa_top);
+
+// Debug info for SHAPES CREATION
+if (keyboard_check(ord("H"))) {
+    draw_set_color(c_white);
+    draw_set_alpha(1);
+    draw_text(20, 200, "=== SHAPE DEBUG ===");
+    draw_text(20, 220, "Drawing: " + (drawing_enabled ? "ON" : "OFF"));
+    draw_text(20, 240, "Path Points: " + string(ds_list_size(shape_path_points)));
+    draw_text(20, 260, "Speed: " + string_format(current_speed, 1, 2));
+    draw_text(20, 280, "Active Shapes: " + string(ds_list_size(shape_flash_list)));
+    draw_text(20, 300, "Min points needed: 20");
+    draw_text(20, 320, "Close distance: < 20 pixels");
+}

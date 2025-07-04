@@ -276,13 +276,54 @@ for (var i = ds_list_size(shape_flash_list) - 1; i >= 0; i--) {
     var shape_data = ds_list_find_value(shape_flash_list, i);
     shape_data[6]--; // Decrease timer
     
+    // Spawn particles at the right moment
+    if (shape_data[6] == 90 && !shape_data[9]) {
+        shape_data[9] = true; // Mark as spawned
+        var bonus_xp = 50 + floor(shape_data[7] / 100);
+        scr_create_xp_particles(shape_data[1], shape_data[2], bonus_xp, 1);
+    }
+    
+    // Update fill alpha (fade out in last second)
+    if (shape_data[6] < 60) {
+        shape_data[8] = shape_data[6] / 60;
+    }
+    
     if (shape_data[6] <= 0) {
         // Cleanup shape points list
         ds_list_destroy(shape_data[0]);
         ds_list_delete(shape_flash_list, i);
     }
 }
-            
+
+// Update XP particles
+for (var i = ds_list_size(global.xp_particles) - 1; i >= 0; i--) {
+    var particle = ds_list_find_value(global.xp_particles, i);
+    
+    // Handle delay
+    if (particle[12] > 0) {
+        particle[12]--;
+        continue;
+    }
+    
+    // Update progress
+    particle[6] += 1 / particle[7];
+    
+    if (particle[6] >= 1) {
+        // Reached target
+        ds_list_delete(global.xp_particles, i);
+    } else {
+        // Move particle with easing
+        var ease = 1 - power(1 - particle[6], 3); // Cubic ease-in
+        
+        // World to GUI conversion
+        var gui_start_x = (particle[2] - camera_get_view_x(view_camera[0])) * (display_get_gui_width() / camera_get_view_width(view_camera[0]));
+        var gui_start_y = (particle[3] - camera_get_view_y(view_camera[0])) * (display_get_gui_height() / camera_get_view_height(view_camera[0]));
+        
+        particle[0] = lerp(gui_start_x, particle[4], ease) + sin(particle[6] * pi * 4) * particle[8];
+        particle[1] = lerp(gui_start_y, particle[5], ease) + cos(particle[6] * pi * 4) * particle[9];
+    }
+}
+
             // Core pulse
             draw_set_alpha(0.8);
             draw_set_color(my_trail_color);
@@ -422,6 +463,27 @@ if (ds_list_size(shape_path_points) == 0 ||
     // Limit path length
     while (ds_list_size(shape_path_points) > max_path_points) {
         ds_list_delete(shape_path_points, 0);
+    }
+}
+
+// Track path for shape detection
+if (ds_list_size(shape_path_points) == 0) {
+    // First point
+    var path_point = [x, y, current_time];
+    ds_list_add(shape_path_points, path_point);
+} else {
+    // Add new point if we've moved enough
+    var last_path_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+    var dist_from_last = point_distance(x, y, last_path_point[0], last_path_point[1]);
+    
+    if (dist_from_last > 10) {
+        var path_point = [x, y, current_time];
+        ds_list_add(shape_path_points, path_point);
+        
+        // Limit path length
+        while (ds_list_size(shape_path_points) > max_path_points) {
+            ds_list_delete(shape_path_points, 0);
+        }
     }
 }
         

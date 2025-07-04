@@ -11,14 +11,14 @@ function scr_detect_closed_shape() {
     
     // Check if we've come back near any earlier point to close a loop
     var loop_start_index = -1;
-    var min_loop_size = 15; // Minimum points to form a valid shape
+    var min_loop_size = 10; // Minimum points to form a valid shape
     
     for (var i = 0; i < ds_list_size(shape_path_points) - min_loop_size; i++) {
         var point = ds_list_find_value(shape_path_points, i);
         var dist = point_distance(current_x, current_y, point[0], point[1]);
         
         // If we're close to an earlier point, we've closed a loop!
-        if (dist < 20) {
+        if (dist < 30) {
             loop_start_index = i;
             break;
         }
@@ -53,7 +53,7 @@ function scr_detect_closed_shape() {
         area = abs(area) / 2;
         
         // Check if shape is large enough (at least 40px equivalent)
-        if (area >= 1600) { // 40x40 = 1600
+        if (area >= 800) { // 20x20 = 800
             // Valid shape detected! Create flash effect
             var shape_data = [
                 shape_points,           // [0] Point list

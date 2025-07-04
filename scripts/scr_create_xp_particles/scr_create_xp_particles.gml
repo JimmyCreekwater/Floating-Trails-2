@@ -1,4 +1,4 @@
-/ CREATE NEW SCRIPT: scr_create_xp_particles
+// CREATE NEW SCRIPT: scr_create_xp_particles
 
 function scr_create_xp_particles(start_x, start_y, xp_amount, gem_amount) {
     // Create XP particles
