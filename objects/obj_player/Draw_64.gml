@@ -413,7 +413,8 @@ draw_roundrect(gallery_x + 10, community_y, gallery_x + gallery_width - 10, comm
 
 draw_set_color(c_black);
 draw_text(gallery_x + gallery_width/2, community_y + 20, "COMMUNITY SHAPE");
-draw_text(gallery_x + gallery_width/2, community_y + 40, current_community_shape);
+draw_text(gallery_x + gallery_width/2, community_y + 40, obj_game.current_community_shape);
+
 draw_text(gallery_x + gallery_width/2, community_y + 60, "200 XP");
 
 // Scrollable shape list

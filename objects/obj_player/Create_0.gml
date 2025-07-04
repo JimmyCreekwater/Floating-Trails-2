@@ -182,3 +182,8 @@ global.xp_particles = ds_list_create();
 stop_timer = 0;
 // Shape recognition
 current_shape_preview = "";
+// Shape gallery UI
+shapes_scroll_offset = 0;
+
+// Shape detection variables
+shape_clearing_timer = 0;

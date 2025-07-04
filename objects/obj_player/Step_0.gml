@@ -463,19 +463,91 @@ for (var i = ds_list_size(global.xp_particles) - 1; i >= 0; i--) {
             }
         }
 		
-		// Track path for shape detection
-if (ds_list_size(shape_path_points) == 0 || 
-    point_distance(x, y, 
-        ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1)[0],
-        ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1)[1]) > 10) {
+		// Track path for shape detection// Track path for shape detection when drawing
+if (drawing_enabled && current_speed > 0.5) {
+    var paint_distance = point_distance(x, y, last_paint_x, last_paint_y);
     
-    var path_point = [x, y, current_time];
-    ds_list_add(shape_path_points, path_point);
-    
-    // Limit path length
-    while (ds_list_size(shape_path_points) > max_path_points) {
-        ds_list_delete(shape_path_points, 0);
+    if (paint_distance > 8) { // Add points every 8 pixels
+        var new_point = [x, y, current_time];
+        ds_list_add(shape_path_points, new_point);
+        
+        // Limit path length for performance
+        while (ds_list_size(shape_path_points) > 200) {
+            ds_list_delete(shape_path_points, 0);
+        }
+        
+        // Debug path tracking
+        if (ds_list_size(shape_path_points) % 20 == 0) {
+            show_debug_message("Path points: " + string(ds_list_size(shape_path_points)));
+        }
     }
+    
+    // Real-time shape completion check
+    if (ds_list_size(shape_path_points) >= 12) {
+        var first_point = ds_list_find_value(shape_path_points, 0);
+        var current_point = [x, y, current_time];
+        var close_distance = point_distance(first_point[0], first_point[1], current_point[0], current_point[1]);
+        
+        // Shape completed when we return close to start
+        if (close_distance < 40) {
+            show_debug_message("SHAPE COMPLETION DETECTED! Distance: " + string(close_distance));
+            
+            // Try closed shape detection
+            var shape_result = scr_detect_closed_shape();
+            if (shape_result > 0) {
+                show_debug_message("Closed shape confirmed: " + string(shape_result));
+                
+                // Try to recognize what shape it is
+                var recognized_shape = scr_recognize_shape();
+                if (recognized_shape != "") {
+                    var shape_bonus = global.shape_points[? recognized_shape];
+                    ink_xp += shape_bonus;
+                    gems += floor(shape_bonus / 50);
+                    
+                    reward_notification = recognized_shape + " RECOGNIZED! +" + string(shape_bonus) + " XP";
+                    reward_notification_timer = 240;
+                } else {
+                    // Generic shape completion
+                    ink_xp += 50;
+                    gems += 1;
+                    reward_notification = "SHAPE COMPLETE! +50 XP, +1 Gem";
+                    reward_notification_timer = 180;
+                }
+                
+                // Level up check
+                if (player_level < 10 && ink_xp >= xp_needed[player_level]) {
+                    player_level++;
+                    just_leveled_up = true;
+                    level_up_timer = 120;
+                }
+                
+                // Clear path for next shape
+                ds_list_clear(shape_path_points);
+            }
+        }
+    }
+    
+    // Auto-clear stale paths
+    if (ds_list_size(shape_path_points) > 0) {
+        var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+        if (current_time - last_point[2] > 180) { // 3 seconds idle
+            ds_list_clear(shape_path_points);
+            show_debug_message("Path cleared - too much time elapsed");
+        }
+    }
+} else {
+    // Not drawing - clear any incomplete paths
+    if (ds_list_size(shape_path_points) > 0) {
+        if (!shape_clearing_timer) shape_clearing_timer = 0;
+        shape_clearing_timer++;
+        
+        if (shape_clearing_timer > 60) { // 1 second delay
+            ds_list_clear(shape_path_points);
+            shape_clearing_timer = 0;
+            show_debug_message("Path cleared - stopped drawing");
+        }
+    }
+}
 	last_paint_x = x;
     last_paint_y = y;
 }
@@ -695,25 +767,25 @@ if (speed_sample_timer >= speed_sample_interval) {
 }
 
 // Shape detection check
-last_shape_check++;
-if (last_shape_check >= shape_check_interval) {
-    last_shape_check = 0;
+<!-- last_shape_check++; -->
+<!-- if (last_shape_check >= shape_check_interval) { -->
+    <!-- last_shape_check = 0; -->
     
-    var detected_shape_size = scr_detect_shapes();
-    if (detected_shape_size > 0) {
-        ink_xp += 50;
-        gems += 1;
+    <!-- var detected_shape_size = scr_detect_shapes(); -->
+    <!-- if (detected_shape_size > 0) { -->
+        <!-- ink_xp += 50; -->
+        <!-- gems += 1; -->
         
-        reward_notification = "SHAPE COMPLETED! +50 XP, +1 Gem";
-        reward_notification_timer = 180;
+        <!-- reward_notification = "SHAPE COMPLETED! +50 XP, +1 Gem"; -->
+        <!-- reward_notification_timer = 180; -->
         
-        if (player_level < 10 && ink_xp >= xp_needed[player_level]) {
-            player_level++;
-            just_leveled_up = true;
-            level_up_timer = 120;
-        }
-    }
-}
+        <!-- if (player_level < 10 && ink_xp >= xp_needed[player_level]) { -->
+            <!-- player_level++; -->
+            <!-- just_leveled_up = true; -->
+            <!-- level_up_timer = 120; -->
+        <!-- } -->
+    <!-- } -->
+<!-- } -->
 
 // N KEY: Neon trail toggle
 if (keyboard_check_pressed(ord("N")) && neon_trail_unlocked) {
