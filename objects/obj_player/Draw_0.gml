@@ -3,6 +3,61 @@
 // Draw player sprite
 draw_self();
 
+// ADD this to obj_player Draw event (after draw_self()):
+
+// DEBUG: Visualize shape path
+if (keyboard_check(ord("H")) || true) { // Always show for now
+    if (ds_list_size(shape_path_points) > 0) {
+        // Draw path points
+        draw_set_color(c_yellow);
+        draw_set_alpha(0.8);
+        
+        for (var i = 0; i < ds_list_size(shape_path_points); i++) {
+            var point = ds_list_find_value(shape_path_points, i);
+            draw_circle(point[0], point[1], 2, false);
+            
+            // Draw lines between points
+            if (i > 0) {
+                var prev_point = ds_list_find_value(shape_path_points, i - 1);
+                draw_set_alpha(0.4);
+                draw_line(prev_point[0], prev_point[1], point[0], point[1]);
+                draw_set_alpha(0.8);
+            }
+        }
+        
+        // Show start and current points
+        var first = ds_list_find_value(shape_path_points, 0);
+        var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+        
+        // Start point (green)
+        draw_set_color(c_lime);
+        draw_circle(first[0], first[1], 8, false);
+        draw_set_color(c_white);
+        draw_text(first[0] + 10, first[1] - 10, "START");
+        
+        // Current point (red)
+        draw_set_color(c_red);
+        draw_circle(last[0], last[1], 6, false);
+        
+        // Distance to close
+        var dist = point_distance(first[0], first[1], last[0], last[1]);
+        draw_set_color(c_white);
+        draw_text(last[0] + 10, last[1], "Dist: " + string(floor(dist)));
+        
+        // Show when close enough to complete
+        if (dist < 30 && ds_list_size(shape_path_points) > 30) {
+            draw_set_color(c_lime);
+            draw_set_alpha(0.5 + sin(current_time * 0.01) * 0.3);
+            draw_line_width(last[0], last[1], first[0], first[1], 3);
+            draw_set_alpha(1);
+            draw_text(first[0] - 20, first[1] - 30, "CLOSE ME!");
+        }
+    }
+    
+    draw_set_alpha(1);
+    draw_set_color(c_white);
+}
+
 // ADD THIS TO obj_player Draw Event (after draw_self()):
 
 // DEBUG: Visualize path points

@@ -37,22 +37,101 @@ if (!instance_exists(obj_game) || global.client < 0) {
     player_connected = true;
 }
 
+// REPLACE the entire painting section in Step event with this:
+
 // Paint trails when moving (PERMANENT LIVING ART SYSTEM)
 if (current_speed > 0.5 && drawing_enabled) {
-    // Track path for shape detection when drawing
     var paint_distance = point_distance(x, y, last_paint_x, last_paint_y);
+    var paint_threshold = max(1, 3 - current_speed);
     
-    if (paint_distance > 8) { // Add points every 8 pixels
-        var new_point = [x, y, current_time];
+    // ALWAYS track path when drawing and moving
+    if (paint_distance > 3) {
+        // Add point to path
+        var new_point = [x, y];
         ds_list_add(shape_path_points, new_point);
         
-        // Limit path length for performance
-        while (ds_list_size(shape_path_points) > 200) {
+        // Check if we've completed a shape (came back near start)
+        if (ds_list_size(shape_path_points) > 20) {
+            var first_point = ds_list_find_value(shape_path_points, 0);
+            var dist_to_start = point_distance(x, y, first_point[0], first_point[1]);
+            
+            // Debug every 10 points
+            if (ds_list_size(shape_path_points) % 10 == 0) {
+                show_debug_message("Path points: " + string(ds_list_size(shape_path_points)) + ", Distance to start: " + string(dist_to_start));
+            }
+            
+            // Shape completed!
+            if (dist_to_start < 30 && ds_list_size(shape_path_points) > 30) {
+                show_debug_message("SHAPE DETECTED! Points: " + string(ds_list_size(shape_path_points)));
+                
+                // Calculate shape center and size
+                var min_x = 999999, max_x = -999999;
+                var min_y = 999999, max_y = -999999;
+                
+                for (var i = 0; i < ds_list_size(shape_path_points); i++) {
+                    var pt = ds_list_find_value(shape_path_points, i);
+                    min_x = min(min_x, pt[0]);
+                    max_x = max(max_x, pt[0]);
+                    min_y = min(min_y, pt[1]);
+                    max_y = max(max_y, pt[1]);
+                }
+                
+                var center_x = (min_x + max_x) / 2;
+                var center_y = (min_y + max_y) / 2;
+                var shape_width = max_x - min_x;
+                var shape_height = max_y - min_y;
+                
+                // Create shape flash effect
+                if (shape_width > 40 && shape_height > 40) {
+                    // Copy path points for animation
+                    var shape_points = ds_list_create();
+                    for (var i = 0; i < ds_list_size(shape_path_points); i++) {
+                        var pt = ds_list_find_value(shape_path_points, i);
+                        ds_list_add(shape_points, [pt[0], pt[1]]);
+                    }
+                    
+                    var shape_data = [
+                        shape_points,           // [0] Point list
+                        center_x,              // [1] Center X
+                        center_y,              // [2] Center Y
+                        shape_width,           // [3] Width
+                        shape_height,          // [4] Height
+                        my_trail_color,        // [5] Color
+                        120,                   // [6] Animation timer (2 seconds)
+                        shape_width * shape_height, // [7] Shape area
+                        1.0,                   // [8] Fill alpha
+                        false                  // [9] Has spawned particles
+                    ];
+                    
+                    ds_list_add(shape_flash_list, shape_data);
+                    
+                    // Awards
+                    var xp_reward = 100;
+                    var gem_reward = 2;
+                    
+                    ink_xp += xp_reward;
+                    gems += gem_reward;
+                    
+                    reward_notification = "SHAPE COMPLETE! +" + string(xp_reward) + " XP, +" + string(gem_reward) + " Gems";
+                    reward_notification_timer = 180;
+                    
+                    // Create XP particles
+                    scr_create_xp_particles(center_x, center_y, xp_reward, gem_reward);
+                    
+                    show_debug_message("Shape completed! XP: " + string(xp_reward) + ", Gems: " + string(gem_reward));
+                }
+                
+                // Clear path for next shape
+                ds_list_clear(shape_path_points);
+            }
+        }
+        
+        // Limit path length
+        while (ds_list_size(shape_path_points) > 300) {
             ds_list_delete(shape_path_points, 0);
         }
     }
     
-    var paint_threshold = max(1, 3 - current_speed);
     
     if (paint_distance > paint_threshold) {
         // Draw on canvas WITH PERMANENT EFFECTS
