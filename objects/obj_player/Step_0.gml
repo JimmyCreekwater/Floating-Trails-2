@@ -10,10 +10,10 @@ scr_camera_control();
 // SPACE KEY: Toggle drawing on/off
 if (keyboard_check_pressed(vk_space) && drawing_toggle_cooldown <= 0) {
     drawing_enabled = !drawing_enabled;
-	// When turning drawing back ON, start fresh
-if (drawing_enabled) {
-    ds_list_clear(shape_path_points);
-}
+    // When turning drawing back ON, start fresh
+    if (drawing_enabled) {
+        ds_list_clear(shape_path_points);
+    }
     reward_notification = drawing_enabled ? "Drawing ON" : "Drawing OFF (Move Only)";
     reward_notification_timer = 60;
     drawing_toggle_cooldown = 15;
@@ -39,7 +39,19 @@ if (!instance_exists(obj_game) || global.client < 0) {
 
 // Paint trails when moving (PERMANENT LIVING ART SYSTEM)
 if (current_speed > 0.5 && drawing_enabled) {
+    // Track path for shape detection when drawing
     var paint_distance = point_distance(x, y, last_paint_x, last_paint_y);
+    
+    if (paint_distance > 8) { // Add points every 8 pixels
+        var new_point = [x, y, current_time];
+        ds_list_add(shape_path_points, new_point);
+        
+        // Limit path length for performance
+        while (ds_list_size(shape_path_points) > 200) {
+            ds_list_delete(shape_path_points, 0);
+        }
+    }
+    
     var paint_threshold = max(1, 3 - current_speed);
     
     if (paint_distance > paint_threshold) {
@@ -64,323 +76,229 @@ if (current_speed > 0.5 && drawing_enabled) {
             var final_brush_size = base_brush_size * speed_brush_modifier * mode_brush_modifier;
             
             // PERMANENT LIVING WEAVE: Bake the wave pattern directly onto canvas
-          // REPLACE the Living Weave painting section in Step_0.gml with this expanded version:
-
-// PERMANENT LIVING WEAVE: Bake the wave pattern directly onto canvas
-if (living_weave_active && living_weave_unlocked) {
-    var line_length = point_distance(last_paint_x, last_paint_y, x, y);
-    var line_dir = point_direction(last_paint_x, last_paint_y, x, y);
-    var time_offset = current_time * 0.01;
-    
-    switch (weave_mode) {
-        case 0: // WAVE FLOW (original)
-            var wave_segments = max(3, line_length / 8);
-            var wave_frequency = 0.3 + (current_speed * 0.1);
-            var wave_amplitude = final_brush_size * 4;
-            
-            // Multi-layer wave for depth
-            draw_set_alpha(0.2);
-            for (var seg = 0; seg < wave_segments - 1; seg++) {
-                var t1 = seg / (wave_segments - 1);
-                var t2 = (seg + 1) / (wave_segments - 1);
+            if (living_weave_active && living_weave_unlocked) {
+                var line_length = point_distance(last_paint_x, last_paint_y, x, y);
+                var line_dir = point_direction(last_paint_x, last_paint_y, x, y);
+                var time_offset = current_time * 0.01;
                 
-                var x1 = lerp(last_paint_x, x, t1);
-                var y1 = lerp(last_paint_y, y, t1);
-                var x2 = lerp(last_paint_x, x, t2);
-                var y2 = lerp(last_paint_y, y, t2);
-                
-                var wave1 = sin((t1 * line_length * wave_frequency) + time_offset) * wave_amplitude;
-                var wave2 = sin((t2 * line_length * wave_frequency) + time_offset) * wave_amplitude;
-                
-                var perp_dir = line_dir + 90;
-                var wave_x1 = x1 + lengthdir_x(wave1, perp_dir);
-                var wave_y1 = y1 + lengthdir_y(wave1, perp_dir);
-                var wave_x2 = x2 + lengthdir_x(wave2, perp_dir);
-                var wave_y2 = y2 + lengthdir_y(wave2, perp_dir);
-                
-                draw_line_width(wave_x1, wave_y1, wave_x2, wave_y2, final_brush_size * 2);
-            }
-            
-            // Core wavy line
-            draw_set_alpha(0.7);
-            for (var seg = 0; seg < wave_segments - 1; seg++) {
-                var t1 = seg / (wave_segments - 1);
-                var t2 = (seg + 1) / (wave_segments - 1);
-                
-                var x1 = lerp(last_paint_x, x, t1);
-                var y1 = lerp(last_paint_y, y, t1);
-                var x2 = lerp(last_paint_x, x, t2);
-                var y2 = lerp(last_paint_y, y, t2);
-                
-                var wave1 = sin((t1 * line_length * wave_frequency) + time_offset) * wave_amplitude;
-                var wave2 = sin((t2 * line_length * wave_frequency) + time_offset) * wave_amplitude;
-                
-                var perp_dir = line_dir + 90;
-                var wave_x1 = x1 + lengthdir_x(wave1, perp_dir);
-                var wave_y1 = y1 + lengthdir_y(wave1, perp_dir);
-                var wave_x2 = x2 + lengthdir_x(wave2, perp_dir);
-                var wave_y2 = y2 + lengthdir_y(wave2, perp_dir);
-                
-                draw_line_width(wave_x1, wave_y1, wave_x2, wave_y2, final_brush_size);
-            }
-            break;
-            
-        case 1: // LIGHTNING STRIKE (ZigZag)
-            var zig_segments = max(4, line_length / 20);
-            var zig_amplitude = final_brush_size * 5;
-            
-            // Electric glow
-            draw_set_alpha(0.3);
-            draw_set_color(merge_color(my_trail_color, c_white, 0.5));
-            
-            for (var seg = 0; seg < zig_segments - 1; seg++) {
-                var t1 = seg / (zig_segments - 1);
-                var t2 = (seg + 1) / (zig_segments - 1);
-                
-                var x1 = lerp(last_paint_x, x, t1);
-                var y1 = lerp(last_paint_y, y, t1);
-                var x2 = lerp(last_paint_x, x, t2);
-                var y2 = lerp(last_paint_y, y, t2);
-                
-                // Sharp zigzag pattern
-                var zig_offset1 = (seg % 2 == 0 ? 1 : -1) * zig_amplitude;
-                var zig_offset2 = ((seg + 1) % 2 == 0 ? 1 : -1) * zig_amplitude;
-                
-                var perp_dir = line_dir + 90;
-                var zig_x1 = x1 + lengthdir_x(zig_offset1, perp_dir);
-                var zig_y1 = y1 + lengthdir_y(zig_offset1, perp_dir);
-                var zig_x2 = x2 + lengthdir_x(zig_offset2, perp_dir);
-                var zig_y2 = y2 + lengthdir_y(zig_offset2, perp_dir);
-                
-                draw_line_width(zig_x1, zig_y1, zig_x2, zig_y2, final_brush_size * 3);
-            }
-            
-            // Sharp core
-            draw_set_alpha(0.8);
-            draw_set_color(my_trail_color);
-            for (var seg = 0; seg < zig_segments - 1; seg++) {
-                var t1 = seg / (zig_segments - 1);
-                var t2 = (seg + 1) / (zig_segments - 1);
-                
-                var x1 = lerp(last_paint_x, x, t1);
-                var y1 = lerp(last_paint_y, y, t1);
-                var x2 = lerp(last_paint_x, x, t2);
-                var y2 = lerp(last_paint_y, y, t2);
-                
-                var zig_offset1 = (seg % 2 == 0 ? 1 : -1) * zig_amplitude;
-                var zig_offset2 = ((seg + 1) % 2 == 0 ? 1 : -1) * zig_amplitude;
-                
-                var perp_dir = line_dir + 90;
-                var zig_x1 = x1 + lengthdir_x(zig_offset1, perp_dir);
-                var zig_y1 = y1 + lengthdir_y(zig_offset1, perp_dir);
-                var zig_x2 = x2 + lengthdir_x(zig_offset2, perp_dir);
-                var zig_y2 = y2 + lengthdir_y(zig_offset2, perp_dir);
-                
-                draw_line_width(zig_x1, zig_y1, zig_x2, zig_y2, final_brush_size);
-            }
-            break;
-            
-        case 2: // CANDY SWIRL
-            var spiral_segments = max(6, line_length / 5);
-            var spiral_radius = final_brush_size * 4;
-            
-            // Draw two intertwining spirals
-            for (var spiral = 0; spiral < 2; spiral++) {
-                var spiral_color = (spiral == 0) ? my_trail_color : merge_color(my_trail_color, c_white, 0.7);
-                draw_set_color(spiral_color);
-                draw_set_alpha(0.8);
-                
-                for (var seg = 0; seg < spiral_segments - 1; seg++) {
-                    var t1 = seg / (spiral_segments - 1);
-                    var t2 = (seg + 1) / (spiral_segments - 1);
-                    
-                    var x1 = lerp(last_paint_x, x, t1);
-                    var y1 = lerp(last_paint_y, y, t1);
-                    var x2 = lerp(last_paint_x, x, t2);
-                    var y2 = lerp(last_paint_y, y, t2);
-                    
-                    // Spiral offset
-                    var spiral_angle1 = (t1 * 720) + (spiral * 180) + time_offset * 20;
-                    var spiral_angle2 = (t2 * 720) + (spiral * 180) + time_offset * 20;
-                    
-                    var spiral_x1 = x1 + lengthdir_x(spiral_radius, spiral_angle1);
-                    var spiral_y1 = y1 + lengthdir_y(spiral_radius, spiral_angle1);
-                    var spiral_x2 = x2 + lengthdir_x(spiral_radius, spiral_angle2);
-                    var spiral_y2 = y2 + lengthdir_y(spiral_radius, spiral_angle2);
-                    
-                    draw_line_width(spiral_x1, spiral_y1, spiral_x2, spiral_y2, final_brush_size * 1.5);
+                switch (weave_mode) {
+                    case 0: // WAVE FLOW (original)
+                        var wave_segments = max(3, line_length / 8);
+                        var wave_frequency = 0.3 + (current_speed * 0.1);
+                        var wave_amplitude = final_brush_size * 4;
+                        
+                        // Multi-layer wave for depth
+                        draw_set_alpha(0.2);
+                        for (var seg = 0; seg < wave_segments - 1; seg++) {
+                            var t1 = seg / (wave_segments - 1);
+                            var t2 = (seg + 1) / (wave_segments - 1);
+                            
+                            var x1 = lerp(last_paint_x, x, t1);
+                            var y1 = lerp(last_paint_y, y, t1);
+                            var x2 = lerp(last_paint_x, x, t2);
+                            var y2 = lerp(last_paint_y, y, t2);
+                            
+                            var wave1 = sin((t1 * line_length * wave_frequency) + time_offset) * wave_amplitude;
+                            var wave2 = sin((t2 * line_length * wave_frequency) + time_offset) * wave_amplitude;
+                            
+                            var perp_dir = line_dir + 90;
+                            var wave_x1 = x1 + lengthdir_x(wave1, perp_dir);
+                            var wave_y1 = y1 + lengthdir_y(wave1, perp_dir);
+                            var wave_x2 = x2 + lengthdir_x(wave2, perp_dir);
+                            var wave_y2 = y2 + lengthdir_y(wave2, perp_dir);
+                            
+                            draw_line_width(wave_x1, wave_y1, wave_x2, wave_y2, final_brush_size * 2);
+                        }
+                        
+                        // Core wavy line
+                        draw_set_alpha(0.7);
+                        for (var seg = 0; seg < wave_segments - 1; seg++) {
+                            var t1 = seg / (wave_segments - 1);
+                            var t2 = (seg + 1) / (wave_segments - 1);
+                            
+                            var x1 = lerp(last_paint_x, x, t1);
+                            var y1 = lerp(last_paint_y, y, t1);
+                            var x2 = lerp(last_paint_x, x, t2);
+                            var y2 = lerp(last_paint_y, y, t2);
+                            
+                            var wave1 = sin((t1 * line_length * wave_frequency) + time_offset) * wave_amplitude;
+                            var wave2 = sin((t2 * line_length * wave_frequency) + time_offset) * wave_amplitude;
+                            
+                            var perp_dir = line_dir + 90;
+                            var wave_x1 = x1 + lengthdir_x(wave1, perp_dir);
+                            var wave_y1 = y1 + lengthdir_y(wave1, perp_dir);
+                            var wave_x2 = x2 + lengthdir_x(wave2, perp_dir);
+                            var wave_y2 = y2 + lengthdir_y(wave2, perp_dir);
+                            
+                            draw_line_width(wave_x1, wave_y1, wave_x2, wave_y2, final_brush_size);
+                        }
+                        break;
+                        
+                    case 1: // LIGHTNING STRIKE (ZigZag)
+                        var zig_segments = max(4, line_length / 20);
+                        var zig_amplitude = final_brush_size * 5;
+                        
+                        // Electric glow
+                        draw_set_alpha(0.3);
+                        draw_set_color(merge_color(my_trail_color, c_white, 0.5));
+                        
+                        for (var seg = 0; seg < zig_segments - 1; seg++) {
+                            var t1 = seg / (zig_segments - 1);
+                            var t2 = (seg + 1) / (zig_segments - 1);
+                            
+                            var x1 = lerp(last_paint_x, x, t1);
+                            var y1 = lerp(last_paint_y, y, t1);
+                            var x2 = lerp(last_paint_x, x, t2);
+                            var y2 = lerp(last_paint_y, y, t2);
+                            
+                            // Sharp zigzag pattern
+                            var zig_offset1 = (seg % 2 == 0 ? 1 : -1) * zig_amplitude;
+                            var zig_offset2 = ((seg + 1) % 2 == 0 ? 1 : -1) * zig_amplitude;
+                            
+                            var perp_dir = line_dir + 90;
+                            var zig_x1 = x1 + lengthdir_x(zig_offset1, perp_dir);
+                            var zig_y1 = y1 + lengthdir_y(zig_offset1, perp_dir);
+                            var zig_x2 = x2 + lengthdir_x(zig_offset2, perp_dir);
+                            var zig_y2 = y2 + lengthdir_y(zig_offset2, perp_dir);
+                            
+                            draw_line_width(zig_x1, zig_y1, zig_x2, zig_y2, final_brush_size * 3);
+                        }
+                        
+                        // Sharp core
+                        draw_set_alpha(0.8);
+                        draw_set_color(my_trail_color);
+                        for (var seg = 0; seg < zig_segments - 1; seg++) {
+                            var t1 = seg / (zig_segments - 1);
+                            var t2 = (seg + 1) / (zig_segments - 1);
+                            
+                            var x1 = lerp(last_paint_x, x, t1);
+                            var y1 = lerp(last_paint_y, y, t1);
+                            var x2 = lerp(last_paint_x, x, t2);
+                            var y2 = lerp(last_paint_y, y, t2);
+                            
+                            var zig_offset1 = (seg % 2 == 0 ? 1 : -1) * zig_amplitude;
+                            var zig_offset2 = ((seg + 1) % 2 == 0 ? 1 : -1) * zig_amplitude;
+                            
+                            var perp_dir = line_dir + 90;
+                            var zig_x1 = x1 + lengthdir_x(zig_offset1, perp_dir);
+                            var zig_y1 = y1 + lengthdir_y(zig_offset1, perp_dir);
+                            var zig_x2 = x2 + lengthdir_x(zig_offset2, perp_dir);
+                            var zig_y2 = y2 + lengthdir_y(zig_offset2, perp_dir);
+                            
+                            draw_line_width(zig_x1, zig_y1, zig_x2, zig_y2, final_brush_size);
+                        }
+                        break;
+                        
+                    case 2: // CANDY SWIRL
+                        var spiral_segments = max(6, line_length / 5);
+                        var spiral_radius = final_brush_size * 4;
+                        
+                        // Draw two intertwining spirals
+                        for (var spiral = 0; spiral < 2; spiral++) {
+                            var spiral_color = (spiral == 0) ? my_trail_color : merge_color(my_trail_color, c_white, 0.7);
+                            draw_set_color(spiral_color);
+                            draw_set_alpha(0.8);
+                            
+                            for (var seg = 0; seg < spiral_segments - 1; seg++) {
+                                var t1 = seg / (spiral_segments - 1);
+                                var t2 = (seg + 1) / (spiral_segments - 1);
+                                
+                                var x1 = lerp(last_paint_x, x, t1);
+                                var y1 = lerp(last_paint_y, y, t1);
+                                var x2 = lerp(last_paint_x, x, t2);
+                                var y2 = lerp(last_paint_y, y, t2);
+                                
+                                // Spiral offset
+                                var spiral_angle1 = (t1 * 720) + (spiral * 180) + time_offset * 20;
+                                var spiral_angle2 = (t2 * 720) + (spiral * 180) + time_offset * 20;
+                                
+                                var spiral_x1 = x1 + lengthdir_x(spiral_radius, spiral_angle1);
+                                var spiral_y1 = y1 + lengthdir_y(spiral_radius, spiral_angle1);
+                                var spiral_x2 = x2 + lengthdir_x(spiral_radius, spiral_angle2);
+                                var spiral_y2 = y2 + lengthdir_y(spiral_radius, spiral_angle2);
+                                
+                                draw_line_width(spiral_x1, spiral_y1, spiral_x2, spiral_y2, final_brush_size * 1.5);
+                            }
+                        }
+                        
+                        // Center guide line
+                        draw_set_alpha(0.4);
+                        draw_set_color(my_trail_color);
+                        draw_line_width(last_paint_x, last_paint_y, x, y, final_brush_size * 0.5);
+                        break;
+                        
+                    case 3: // HEARTBEAT PULSE
+                        var pulse_segments = max(4, line_length / 15);
+                        var pulse_base_amp = final_brush_size * 3;
+                        
+                        // Outer pulse glow
+                        draw_set_alpha(0.2);
+                        draw_set_color(merge_color(my_trail_color, c_red, 0.3));
+                        
+                        for (var seg = 0; seg < pulse_segments - 1; seg++) {
+                            var t1 = seg / (pulse_segments - 1);
+                            var t2 = (seg + 1) / (pulse_segments - 1);
+                            
+                            var x1 = lerp(last_paint_x, x, t1);
+                            var y1 = lerp(last_paint_y, y, t1);
+                            var x2 = lerp(last_paint_x, x, t2);
+                            var y2 = lerp(last_paint_y, y, t2);
+                            
+                            // Heartbeat pattern
+                            var beat_phase1 = t1 * 4 * pi;
+                            var beat_phase2 = t2 * 4 * pi;
+                            var beat1 = sin(beat_phase1) * exp(-t1 * 2) * pulse_base_amp * 2;
+                            var beat2 = sin(beat_phase2) * exp(-t2 * 2) * pulse_base_amp * 2;
+                            
+                            var perp_dir = line_dir + 90;
+                            var beat_x1 = x1 + lengthdir_x(beat1, perp_dir);
+                            var beat_y1 = y1 + lengthdir_y(beat1, perp_dir);
+                            var beat_x2 = x2 + lengthdir_x(beat2, perp_dir);
+                            var beat_y2 = y2 + lengthdir_y(beat2, perp_dir);
+                            
+                            draw_line_width(beat_x1, beat_y1, beat_x2, beat_y2, final_brush_size * 3);
+                        }
+                        
+                        // Core pulse
+                        draw_set_alpha(0.8);
+                        draw_set_color(my_trail_color);
+                        for (var seg = 0; seg < pulse_segments - 1; seg++) {
+                            var t1 = seg / (pulse_segments - 1);
+                            var t2 = (seg + 1) / (pulse_segments - 1);
+                            
+                            var x1 = lerp(last_paint_x, x, t1);
+                            var y1 = lerp(last_paint_y, y, t1);
+                            var x2 = lerp(last_paint_x, x, t2);
+                            var y2 = lerp(last_paint_y, y, t2);
+                            
+                            var beat_phase1 = t1 * 4 * pi;
+                            var beat_phase2 = t2 * 4 * pi;
+                            var beat1 = sin(beat_phase1) * exp(-t1 * 2) * pulse_base_amp;
+                            var beat2 = sin(beat_phase2) * exp(-t2 * 2) * pulse_base_amp;
+                            
+                            var perp_dir = line_dir + 90;
+                            var beat_x1 = x1 + lengthdir_x(beat1, perp_dir);
+                            var beat_y1 = y1 + lengthdir_y(beat1, perp_dir);
+                            var beat_x2 = x2 + lengthdir_x(beat2, perp_dir);
+                            var beat_y2 = y2 + lengthdir_y(beat2, perp_dir);
+                            
+                            draw_line_width(beat_x1, beat_y1, beat_x2, beat_y2, final_brush_size);
+                        }
+                        break;
                 }
-            }
-            
-            // Center guide line
-            draw_set_alpha(0.4);
-            draw_set_color(my_trail_color);
-            draw_line_width(last_paint_x, last_paint_y, x, y, final_brush_size * 0.5);
-            break;
-            
-        case 3: // HEARTBEAT PULSE
-            var pulse_segments = max(4, line_length / 15);
-            var pulse_base_amp = final_brush_size * 3;
-            
-            // Outer pulse glow
-            draw_set_alpha(0.2);
-            draw_set_color(merge_color(my_trail_color, c_red, 0.3));
-            
-            for (var seg = 0; seg < pulse_segments - 1; seg++) {
-                var t1 = seg / (pulse_segments - 1);
-                var t2 = (seg + 1) / (pulse_segments - 1);
                 
-                var x1 = lerp(last_paint_x, x, t1);
-                var y1 = lerp(last_paint_y, y, t1);
-                var x2 = lerp(last_paint_x, x, t2);
-                var y2 = lerp(last_paint_y, y, t2);
-                
-                // Heartbeat pattern
-                var beat_phase1 = t1 * 4 * pi;
-                var beat_phase2 = t2 * 4 * pi;
-                var beat1 = sin(beat_phase1) * exp(-t1 * 2) * pulse_base_amp * 2;
-                var beat2 = sin(beat_phase2) * exp(-t2 * 2) * pulse_base_amp * 2;
-                
-                var perp_dir = line_dir + 90;
-                var beat_x1 = x1 + lengthdir_x(beat1, perp_dir);
-                var beat_y1 = y1 + lengthdir_y(beat1, perp_dir);
-                var beat_x2 = x2 + lengthdir_x(beat2, perp_dir);
-                var beat_y2 = y2 + lengthdir_y(beat2, perp_dir);
-                
-                draw_line_width(beat_x1, beat_y1, beat_x2, beat_y2, final_brush_size * 3);
-            }
-			
-// Shape detection check
-if (drawing_enabled && shape_check_cooldown <= 0) {
-    shape_check_cooldown = 30; // Check every half second
-    
-    // Check if we're drawing a recognized shape
-    current_shape_preview = scr_recognize_shape();
-    
-// Shape detection check
-if (drawing_enabled && shape_check_cooldown <= 0) {
-    shape_check_cooldown = 30; // Check every half second
-    
-    // Check what shape we're drawing
-    current_shape_preview = scr_recognize_shape();
-}
-if (shape_check_cooldown > 0) shape_check_cooldown--;
-
-// Check if shape is complete
-if (current_shape_preview == "Circle" && ds_list_size(shape_path_points) > 8) {
-    var first = ds_list_find_value(shape_path_points, 0);
-    var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
-    var close_dist = point_distance(first[0], first[1], last[0], last[1]);
-    
-    if (close_dist < 30) {
-        // Circle completed!
-        ink_xp += 100;
-        gems += 2;
-        
-        reward_notification = "CIRCLE COMPLETE! +100 XP";
-        reward_notification_timer = 180;
-        
-        // Clear path
-        ds_list_clear(shape_path_points);
-        current_shape_preview = "";
-    }
-}
-if (shape_check_cooldown > 0) shape_check_cooldown--;
-
-// Update shape flash animations
-for (var i = ds_list_size(shape_flash_list) - 1; i >= 0; i--) {
-    var shape_data = ds_list_find_value(shape_flash_list, i);
-    shape_data[6]--; // Decrease timer
-    
-    // Spawn particles at the right moment
-    if (shape_data[6] == 90 && !shape_data[9]) {
-        shape_data[9] = true; // Mark as spawned
-        var bonus_xp = 50 + floor(shape_data[7] / 100);
-        scr_create_xp_particles(shape_data[1], shape_data[2], bonus_xp, 1);
-    }
-    
-    // Update fill alpha (fade out in last second)
-    if (shape_data[6] < 60) {
-        shape_data[8] = shape_data[6] / 60;
-    }
-    
-    if (shape_data[6] <= 0) {
-        // Cleanup shape points list
-        ds_list_destroy(shape_data[0]);
-        ds_list_delete(shape_flash_list, i);
-    }
-}
-
-// Update XP particles
-for (var i = ds_list_size(global.xp_particles) - 1; i >= 0; i--) {
-    var particle = ds_list_find_value(global.xp_particles, i);
-    
-    // Handle delay
-    if (particle[12] > 0) {
-        particle[12]--;
-        continue;
-    }
-    
-    // Update progress
-    particle[6] += 1 / particle[7];
-    
-    if (particle[6] >= 1) {
-        // Reached target
-        ds_list_delete(global.xp_particles, i);
-    } else {
-        // Move particle with easing
-        var ease = 1 - power(1 - particle[6], 3); // Cubic ease-in
-        
-        // World to GUI conversion
-        var gui_start_x = (particle[2] - camera_get_view_x(view_camera[0])) * (display_get_gui_width() / camera_get_view_width(view_camera[0]));
-        var gui_start_y = (particle[3] - camera_get_view_y(view_camera[0])) * (display_get_gui_height() / camera_get_view_height(view_camera[0]));
-        
-        particle[0] = lerp(gui_start_x, particle[4], ease) + sin(particle[6] * pi * 4) * particle[8];
-        particle[1] = lerp(gui_start_y, particle[5], ease) + cos(particle[6] * pi * 4) * particle[9];
-    }
-}
-
-            // Core pulse
-            draw_set_alpha(0.8);
-            draw_set_color(my_trail_color);
-            for (var seg = 0; seg < pulse_segments - 1; seg++) {
-                var t1 = seg / (pulse_segments - 1);
-                var t2 = (seg + 1) / (pulse_segments - 1);
-                
-                var x1 = lerp(last_paint_x, x, t1);
-                var y1 = lerp(last_paint_y, y, t1);
-                var x2 = lerp(last_paint_x, x, t2);
-                var y2 = lerp(last_paint_y, y, t2);
-                
-                var beat_phase1 = t1 * 4 * pi;
-                var beat_phase2 = t2 * 4 * pi;
-                var beat1 = sin(beat_phase1) * exp(-t1 * 2) * pulse_base_amp;
-                var beat2 = sin(beat_phase2) * exp(-t2 * 2) * pulse_base_amp;
-                
-                var perp_dir = line_dir + 90;
-                var beat_x1 = x1 + lengthdir_x(beat1, perp_dir);
-                var beat_y1 = y1 + lengthdir_y(beat1, perp_dir);
-                var beat_x2 = x2 + lengthdir_x(beat2, perp_dir);
-                var beat_y2 = y2 + lengthdir_y(beat2, perp_dir);
-                
-                draw_line_width(beat_x1, beat_y1, beat_x2, beat_y2, final_brush_size);
-            }
-            break;
-    }
-    
-    // Store animation data for PERMANENT kinetic effect
-    var wave_data = [
-        last_paint_x, last_paint_y, x, y,           // Line segment
-        current_time,                                // Creation time
-        0.3 + (current_speed * 0.1),                 // Locked frequency
-        final_brush_size * 2,                        // Locked amplitude  
-        my_trail_color,                              // Color
-        final_brush_size,                            // Brush size
-        current_speed,                               // Creation speed
-        weave_mode                                   // Weave mode when created
-    ];
-    ds_list_add(global.permanent_wave_segments, wave_data);
-}
+                // Store animation data for PERMANENT kinetic effect
+                var wave_data = [
+                    last_paint_x, last_paint_y, x, y,           // Line segment
+                    current_time,                                // Creation time
+                    0.3 + (current_speed * 0.1),                 // Locked frequency
+                    final_brush_size * 2,                        // Locked amplitude  
+                    my_trail_color,                              // Color
+                    final_brush_size,                            // Brush size
+                    current_speed,                               // Creation speed
+                    weave_mode                                   // Weave mode when created
+                ];
+                ds_list_add(global.permanent_wave_segments, wave_data);
                 
             } else {
                 // Normal straight line painting
@@ -466,24 +384,14 @@ for (var i = ds_list_size(global.xp_particles) - 1; i >= 0; i--) {
                 }
             }
         }
-		
-		// Track path for shape detection// Track path for shape detection when drawing
-if (drawing_enabled && current_speed > 0.5) {
-    var paint_distance = point_distance(x, y, last_paint_x, last_paint_y);
-    
-    if (paint_distance > 8) { // Add points every 8 pixels
-        var new_point = [x, y, current_time];
-        ds_list_add(shape_path_points, new_point);
-        
-        // Limit path length for performance
-        while (ds_list_size(shape_path_points) > 200) {
-            ds_list_delete(shape_path_points, 0);
-        }
         
         // Debug path tracking
         if (ds_list_size(shape_path_points) % 20 == 0) {
             show_debug_message("Path points: " + string(ds_list_size(shape_path_points)));
         }
+        
+        last_paint_x = x;
+        last_paint_y = y;
     }
     
     // Real-time shape completion check
@@ -552,9 +460,66 @@ if (drawing_enabled && current_speed > 0.5) {
         }
     }
 }
-	last_paint_x = x;
-    last_paint_y = y;
+
+// Update shape flash animations
+for (var i = ds_list_size(shape_flash_list) - 1; i >= 0; i--) {
+    var shape_data = ds_list_find_value(shape_flash_list, i);
+    shape_data[6]--; // Decrease timer
+    
+    // Spawn particles at the right moment
+    if (shape_data[6] == 90 && !shape_data[9]) {
+        shape_data[9] = true; // Mark as spawned
+        var bonus_xp = 50 + floor(shape_data[7] / 100);
+        scr_create_xp_particles(shape_data[1], shape_data[2], bonus_xp, 1);
+    }
+    
+    // Update fill alpha (fade out in last second)
+    if (shape_data[6] < 60) {
+        shape_data[8] = shape_data[6] / 60;
+    }
+    
+    if (shape_data[6] <= 0) {
+        // Cleanup shape points list
+        ds_list_destroy(shape_data[0]);
+        ds_list_delete(shape_flash_list, i);
+    }
 }
+
+// Update XP particles
+for (var i = ds_list_size(global.xp_particles) - 1; i >= 0; i--) {
+    var particle = ds_list_find_value(global.xp_particles, i);
+    
+    // Handle delay
+    if (particle[12] > 0) {
+        particle[12]--;
+        continue;
+    }
+    
+    // Update progress
+    particle[6] += 1 / particle[7];
+    
+    if (particle[6] >= 1) {
+        // Reached target
+        ds_list_delete(global.xp_particles, i);
+    } else {
+        // Move particle with easing
+        var ease = 1 - power(1 - particle[6], 3); // Cubic ease-in
+        
+        // World to GUI conversion
+        var gui_start_x = (particle[2] - camera_get_view_x(view_camera[0])) * (display_get_gui_width() / camera_get_view_width(view_camera[0]));
+        var gui_start_y = (particle[3] - camera_get_view_y(view_camera[0])) * (display_get_gui_height() / camera_get_view_height(view_camera[0]));
+        
+        particle[0] = lerp(gui_start_x, particle[4], ease) + sin(particle[6] * pi * 4) * particle[8];
+        particle[1] = lerp(gui_start_y, particle[5], ease) + cos(particle[6] * pi * 4) * particle[9];
+    }
+}
+
+// Shape detection check
+if (drawing_enabled && shape_check_cooldown <= 0) {
+    shape_check_cooldown = 30;
+    current_shape_preview = scr_recognize_shape();
+}
+if (shape_check_cooldown > 0) shape_check_cooldown--;
 
 // Q KEY SPARKLE BEAM: Manual activation system
 if (keyboard_check_pressed(ord("Q")) && sparkle_pulse_unlocked && sparkle_pulse_active && pulse_generation_cooldown <= 0) {
@@ -678,8 +643,6 @@ if (keyboard_check_pressed(ord("W")) && living_weave_unlocked) {
     reward_notification_timer = 90;
 }
 
-// In obj_player Step_0.gml, find the W key toggle and add this RIGHT AFTER it:
-
 // R KEY: Cycle through weave modes (make sure this is OUTSIDE the W key block)
 if (keyboard_check_pressed(ord("R")) && living_weave_unlocked && living_weave_active && weave_mode_cooldown <= 0) {
     weave_mode = (weave_mode + 1) % weave_mode_count;
@@ -777,8 +740,6 @@ if (keyboard_check_pressed(ord("T"))) {
     show_debug_message("Player XP: " + string(ink_xp));
     show_debug_message("Player Level: " + string(player_level));
 }
-
-// ADD to obj_player Step Event (at the very end):
 
 // K KEY: Force create a test shape at current position
 if (keyboard_check_pressed(ord("K"))) {
