@@ -1,3 +1,12 @@
+// Safety check: clear path if it has invalid data
+if (ds_list_size(shape_path_points) > 0) {
+    var test_point = ds_list_find_value(shape_path_points, 0);
+    if (array_length(test_point) < 3) {
+        ds_list_clear(shape_path_points);
+        show_debug_message("Cleared invalid path data");
+    }
+}
+
 // ===== obj_player - STEP EVENT =====
 // ALL movement, painting, and update logic goes here
 
@@ -46,8 +55,8 @@ if (current_speed > 0.5 && drawing_enabled) {
     
     // ALWAYS track path when drawing and moving
     if (paint_distance > 3) {
-        // Add point to path
-        var new_point = [x, y];
+        // Add point to path WITH TIME
+        var new_point = [x, y, current_time];
         ds_list_add(shape_path_points, new_point);
         
         // Check if we've completed a shape (came back near start)
@@ -87,7 +96,7 @@ if (current_speed > 0.5 && drawing_enabled) {
                     var shape_points = ds_list_create();
                     for (var i = 0; i < ds_list_size(shape_path_points); i++) {
                         var pt = ds_list_find_value(shape_path_points, i);
-                        ds_list_add(shape_points, [pt[0], pt[1]]);
+                        ds_list_add(shape_points, [pt[0], pt[1]]); // Store without time for drawing
                     }
                     
                     var shape_data = [
@@ -132,7 +141,7 @@ if (current_speed > 0.5 && drawing_enabled) {
         }
     }
     
-    
+    // Paint on canvas when movement threshold is met
     if (paint_distance > paint_threshold) {
         // Draw on canvas WITH PERMANENT EFFECTS
         if (surface_exists(obj_game.trail_canvas)) {
@@ -473,55 +482,11 @@ if (current_speed > 0.5 && drawing_enabled) {
         last_paint_y = y;
     }
     
-    // Real-time shape completion check
-    if (ds_list_size(shape_path_points) >= 12) {
-        var first_point = ds_list_find_value(shape_path_points, 0);
-        var current_point = [x, y, current_time];
-        var close_distance = point_distance(first_point[0], first_point[1], current_point[0], current_point[1]);
-        
-        // Shape completed when we return close to start
-        if (close_distance < 40) {
-            show_debug_message("SHAPE COMPLETION DETECTED! Distance: " + string(close_distance));
-            
-            // Try closed shape detection
-            var shape_result = scr_detect_closed_shape();
-            if (shape_result > 0) {
-                show_debug_message("Closed shape confirmed: " + string(shape_result));
-                
-                // Try to recognize what shape it is
-                var recognized_shape = scr_recognize_shape();
-                if (recognized_shape != "") {
-                    var shape_bonus = global.shape_points[? recognized_shape];
-                    ink_xp += shape_bonus;
-                    gems += floor(shape_bonus / 50);
-                    
-                    reward_notification = recognized_shape + " RECOGNIZED! +" + string(shape_bonus) + " XP";
-                    reward_notification_timer = 240;
-                } else {
-                    // Generic shape completion
-                    ink_xp += 50;
-                    gems += 1;
-                    reward_notification = "SHAPE COMPLETE! +50 XP, +1 Gem";
-                    reward_notification_timer = 180;
-                }
-                
-                // Level up check
-                if (player_level < 10 && ink_xp >= xp_needed[player_level]) {
-                    player_level++;
-                    just_leveled_up = true;
-                    level_up_timer = 120;
-                }
-                
-                // Clear path for next shape
-                ds_list_clear(shape_path_points);
-            }
-        }
-    }
-    
     // Auto-clear stale paths
     if (ds_list_size(shape_path_points) > 0) {
         var last_point = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
-        if (current_time - last_point[2] > 180) { // 3 seconds idle
+        // FIXED: Check array length before accessing
+        if (array_length(last_point) >= 3 && current_time - last_point[2] > 3000) { // 3 seconds idle
             ds_list_clear(shape_path_points);
             show_debug_message("Path cleared - too much time elapsed");
         }
@@ -820,6 +785,8 @@ if (keyboard_check_pressed(ord("T"))) {
     show_debug_message("Player Level: " + string(player_level));
 }
 
+// Find the K KEY section and update it:
+
 // K KEY: Force create a test shape at current position
 if (keyboard_check_pressed(ord("K"))) {
     show_debug_message("=== FORCING TEST SHAPE ===");
@@ -834,20 +801,19 @@ if (keyboard_check_pressed(ord("K"))) {
         var angle = (i / points) * 360;
         var px = x + lengthdir_x(radius, angle);
         var py = y + lengthdir_y(radius, angle);
-        var point = [px, py, 0];
+        var point = [px, py, current_time]; // FIXED: Added time
         ds_list_add(shape_path_points, point);
     }
     
     // Force detection
-    var result = scr_detect_closed_shape();
-    show_debug_message("Force test result: " + string(result));
+    show_debug_message("Created test circle with " + string(ds_list_size(shape_path_points)) + " points");
     
-    if (result > 0) {
-        // Also force the rewards
-        ink_xp += 50;
-        gems += 1;
-        reward_notification = "TEST SHAPE! +50 XP, +1 Gem";
-        reward_notification_timer = 180;
+    // Manually trigger shape completion logic
+    if (ds_list_size(shape_path_points) > 0) {
+        var first = ds_list_find_value(shape_path_points, 0);
+        var last = ds_list_find_value(shape_path_points, ds_list_size(shape_path_points) - 1);
+        var dist = point_distance(first[0], first[1], last[0], last[1]);
+        show_debug_message("Distance between first and last: " + string(dist));
     }
 }
 

@@ -1,6 +1,9 @@
 // CREATE NEW SCRIPT: scr_create_xp_particles
 
 function scr_create_xp_particles(start_x, start_y, xp_amount, gem_amount) {
+    // Get GUI dimensions
+    var gui_height = display_get_gui_height(); // FIXED: Define gui_height
+    
     // Create XP particles
     var particle_count = min(10, floor(xp_amount / 10)); // 1 particle per 10 XP, max 10
     
